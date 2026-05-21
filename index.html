@@ -186,7 +186,6 @@ body {
   color: var(--text);
   outline: none;
   width: 100%;
-  appearance: none;
   -webkit-appearance: none;
 }
 .form-control:focus {
@@ -617,7 +616,7 @@ body {
 </div>
 
 <!-- ==========================================
-     VIEW 1: DECK PLANNER 
+     VIEW 1: ACTIVITIES 
      ========================================== -->
 <div id="view-planner" class="app-view active">
   <div class="planner-tabs">
@@ -806,11 +805,11 @@ body {
 
 
 <!-- ==========================================
-     VIEW 4: SUMMER ROUTINE DASHBOARD
+     VIEW 4: SUMMER PLANNER DASHBOARD
      ========================================== -->
 <div id="view-routine" class="app-view">
   <div class="panel">
-    <h2 style="font-family: 'Fraunces', serif; font-size: 22px; text-align: center; margin-bottom: 4px;">Summer Routine Framework</h2>
+    <h2 style="font-family: 'Fraunces', serif; font-size: 22px; text-align: center; margin-bottom: 4px;">Summer Planner Framework</h2>
     <p style="text-align: center; font-size: 13px; color: #666; margin-bottom: 20px;">Design your weekly routine. Tap any highlighted flexible block to assign an activity card from your deck.</p>
   </div>
 
@@ -842,13 +841,11 @@ body {
      ========================================== -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchAppView('planner')" id="nav-planner">
-    <svg class="nav-icon" viewBox="0 0 24 24">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-      <line x1="16" y1="2" x2="16" y2="6"></line>
-      <line x1="8" y1="2" x2="8" y2="6"></line>
-      <line x1="3" y1="10" x2="21" y2="10"></line>
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+      <path d="M9 17h6M9 12h6M9 7h6"></path>
     </svg>
-    Planner
+    Activities
   </button>
   <button class="nav-btn" onclick="switchAppView('randomizer')" id="nav-randomizer">
     <svg class="nav-icon" viewBox="0 0 24 24">
@@ -859,11 +856,13 @@ body {
     Randomizer
   </button>
   <button class="nav-btn" onclick="switchAppView('routine')" id="nav-routine">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-      <path d="M9 17h6M9 12h6M9 7h6"></path>
+    <svg class="nav-icon" viewBox="0 0 24 24">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
-    Routine
+    Planner
   </button>
   <button class="nav-btn" onclick="switchAppView('custom')" id="nav-custom">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -876,11 +875,10 @@ body {
 </nav>
 
 <script type="module">
-// --- FIREBASE IMPORTS (12.13.0 STABLE BROWSER RELEASES) ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+// --- FIREBASE IMPORTS (11.6.1 STABLE BROWSER RELEASES) ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- STATE STORAGE ---
 let savedTitles = [];
@@ -896,7 +894,7 @@ let routineSchedule = {}; // { "Monday_burn": "Backyard water play", "Tuesday_jo
 let activeSelectionBlock = null; // Stores currently opened block reference: e.g. "Monday_burn"
 
 // =========================================================================
-// PASTE YOUR FIREBASE CONFIGURATION HERE INSTEAD OF THE MOCK VALUE:
+// HARDCODED SECURE FIREBASE CONFIGURATION (RULE 1 & 3 READY)
 // =========================================================================
 const myLocalFirebaseConfig = {
   apiKey: "AIzaSyAWIIlkz9qr-Sw4iMZQp09N7xdkbbl-NdA",
@@ -906,7 +904,7 @@ const myLocalFirebaseConfig = {
   messagingSenderId: "221565202225",
   appId: "1:221565202225:web:c66a86a1318149440aca10",
   measurementId: "G-XH9804E738"
-}; // Set to your firebaseConfig object to override
+};
 
 // Resolve app ID & configuration parameters programmatically
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-summer-app';
@@ -1039,98 +1037,120 @@ const baseActivities = [
   {cat:"indoor",title:"Button sorting color wheel",ages:"both",cost:"low",time:"30–45 min",materials:"Assorted colorful buttons, construction paper segments",benefit:"Visual distinction tracking, classification logic categorization"},
   {cat:"indoor",title:"Magic paper towel reveal art",ages:"both",cost:"free",time:"30 min",materials:"Paper towels, washable markers, shallow tray of water",benefit:"Capillary absorption action visualization, ink bleed surprise logic"},
   {cat:"indoor",title:"Foil boat float test buoyancy",ages:"both",cost:"free",time:"45 min",materials:"Aluminum foil sheets, sink or plastic bin of water, pennies",benefit:"Hydrodynamic structural design study, volume mass distribution comparison"},
-  {cat:"indoor",title:"Flashlight reading fort lounge",ages:"both",cost:"free",time:"1 hr",materials:"Dark room, blankets, flashlights, favorite picture books",benefit:"Cozy reading lifestyle tracking, atmospheric text exploration engagement"}
+  {cat:"indoor",title:"Flashlight reading fort lounge",ages:"both",cost:"free",time:"1 hr",materials:"Dark room, blankets, flashlights, favorite picture books",benefit:"Cozy reading lifestyle tracking, atmospheric text exploration engagement"},
+
+  // RAINY DAY
+  {cat:"rainy",title:"Rainy day movie + discussion",ages:"both",cost:"free",time:"2–3 hrs",materials:"Streaming service",benefit:"7-yr-old practices comprehension and critical thinking; 3-yr-old builds narrative vocabulary"},
+  {cat:"rainy",title:"Rainy day bake-off challenge",ages:"both",cost:"low",time:"1.5–2 hrs",materials:"Pantry staples",benefit:"Creativity under constraints, practical math, delayed gratification",safety:"3-yr-old on no-heat stations only"},
+  {cat:"rainy",title:"Indoor scavenger hunt",ages:"both",cost:"free",time:"45–60 min",materials:"Written or picture clues",benefit:"7-yr-old: reading clues; 3-yr-old: picture recognition and following directions"},
+  {cat:"rainy",title:"Lego build-a-world marathon",ages:"both",cost:"free",time:"2–3 hrs",materials:"All available Legos",benefit:"Sustained focus, collaborative world-building, spatial creativity"},
+  {cat:"rainy",title:"Make-your-own comic strip",ages:"sep",cost:"free",time:"45–60 min",materials:"Paper, rulers, pens, markers",benefit:"7-yr-old: narrative sequencing, dialogue; 3-yr-old: drawing panels with narration from parent"},
+  {cat:"rainy",title:"Shadow puppet theater",ages:"both",cost:"free",time:"45–60 min",materials:"Flashlight, hands, simple cutout shapes",benefit:"Storytelling, imaginative play, early geometry of light"},
+  {cat:"rainy",title:"Kitchen chemistry day",ages:"both",cost:"free",time:"1.5 hrs",materials:"Baking soda, vinegar, cabbage juice pH indicator, oil",benefit:"Scientific method, cause and effect, wonder",safety:"Supervise all liquid pouring with 3-yr-old"},
+  {cat:"rainy",title:"Cardboard box city",ages:"both",cost:"free",time:"2–3 hrs",materials:"All available cardboard boxes, tape, markers, paint",benefit:"Architecture thinking, collaborative design, imaginative play"},
+  {cat:"rainy",title:"Puddle jumping expedition",ages:"both",cost:"free",time:"30–45 min",materials:"Raincoats, rain boots, umbrellas",benefit:"Gross motor power, sensory joy, embracing unexpected environments",safety:"Change into dry clothes immediately after to avoid catching a chill"},
+  {cat:"rainy",title:"Indoor laser maze",ages:"both",cost:"free",time:"30–60 min",materials:"Yarn or painters tape, long hallway",benefit:"Spatial planning, flexibility, problem-solving movement"},
+  {cat:"rainy",title:"Window rain painting",ages:"both",cost:"low",time:"45–60 min",materials:"Washable window markers or tempera paint with dish soap",benefit:"Unique canvas novelty, large arm motor strokes, easy cleanup"},
+  {cat:"rainy",title:"DIY indoor bowling alley",ages:"both",cost:"free",time:"30–45 min",materials:"Empty plastic bottles or plastic cups, soft playground ball",benefit:"Tracking skills, physics momentum, fine-motor stack resetting"},
+  {cat:"rainy",title:"Glow-stick dance party",ages:"both",cost:"low",time:"30 min",materials:"Glow sticks, speaker, dark room",benefit:"Gross motor expression, vestibular stimulation, sensory tracking"},
+  {cat:"rainy",title:"Silly tape roads maze",ages:"both",cost:"free",time:"1–2 hrs",materials:"Painter's tape, toy cars, blocks",benefit:"7-yr-old: planning grid map architecture; 3-yr-old: vehicle navigation and traffic play"},
+  {cat:"rainy",title:"Indoor balloon volleyball",ages:"both",cost:"free",time:"30–45 min",materials:"Balloon, strung yarn across chairs for net",benefit:"Hand-eye impact tracking, safe energetic interior movement"},
+  {cat:"rainy",title:"DIY rainstick instrument workshop",ages:"both",cost:"free",time:"45–60 min",materials:"Cardboard shipping tubes, aluminum foil, rice or dried beans, tape",benefit:"Acoustic sound replication physics, fine-motor filling exercise"},
+  {cat:"rainy",title:"Sofa cushion tumbling mat mats",ages:"both",cost:"free",time:"30–60 min",materials:"Sofa cushions, mattresses, floor space",benefit:"Proprioceptive regulation processing, energy expenditure distribution"},
+  {cat:"rainy",title:"Indoor animal track detective",ages:"both",cost:"free",time:"30–45 min",materials:"Paper paw cutouts taped to floor boards leading to destinations",benefit:"Visual tracking sequence, deductive logical deduction exploration"},
+  {cat:"rainy",title:"Color hunt classification sweep",ages:"both",cost:"free",time:"30 min",materials:"Laundry baskets, colorful household items",benefit:"Rapid sorting taxonomy execution, prompt processing synchronization"},
+  {cat:"rainy",title:"Stuffed animal medical clinic",ages:"both",cost:"free",time:"1 hr",materials:"Plush toys, band-aids, gauze strips, toy stethoscopes",benefit:"Empathy training, social role simulation narrative frameworks"},
+  {cat:"rainy",title:"Blowing cotton ball desk races",ages:"both",cost:"free",time:"30 min",materials:"Plastic drinking straws, cotton balls, tabletop lanes tape",benefit:"Oral motor muscular development, breath lung pressure mastery"},
+  {cat:"rainy",title:"Indoor laundry basket basketball",ages:"both",cost:"free",time:"30 min",materials:"Laundry baskets, rolled-up socks or soft foam balls",benefit:"Trajectory calibration estimation, motor launch consistency control"},
+  {cat:"rainy",title:"Dry bean construction pit excavation",ages:"both",cost:"low",time:"45–60 min",materials:"Large underbed plastic bin, bags of dry pinto beans, toy diggers",benefit:"Deep pressure sensory regulation, fine motor grasp mechanics",safety:"Supervise 3-yr-old to avoid accidental ingestion or inhalation of raw beans"},
+  {cat:"rainy",title:"Tissue paper stained glass window templates",ages:"both",cost:"low",time:"1 hr",materials:"Colorful tissue paper squares, clear contact paper, scissors",benefit:"Light filtering aesthetic analysis, manual transparency overlap testing"},
+  {cat:"rainy",title:"Indoor echoing hallway vocals tracking",ages:"both",cost:"free",time:"30 min",materials:"Empty hallway or tiled bathroom, voice variations",benefit:"Acoustic sound wave rebound feedback checking, auditory vocal control"},
+  {cat:"rainy",title:"Bed sheet indoor parachute dynamics",ages:"both",cost:"free",time:"30 min",materials:"Large flat bed sheet, lightweight plastic pit balls",benefit:"Bilateral arm lifting synchronization, wave frequency interaction checks"},
+  {cat:"rainy",title:"Cardboard box drawing vehicle hulls",ages:"both",cost:"free",time:"1.5 hrs",materials:"Large empty cardboard shipping containers, markers",benefit:"Imaginative navigation enclosure play, structural canvas personalization"},
+  {cat:"rainy",title:"Magazine cutting dream vacation collage",ages:"sep",cost:"free",time:"1–2 hrs",materials:"Old catalogs/magazines, glue sticks, construction paper",benefit:"7-yr-old: categorized thematic cutting selection; 3-yr-old: sensory placement paste"},
+  {cat:"rainy",title:"Ice cube tray color drop labs",ages:"both",cost:"free",time:"30–45 min",materials:"White plastic ice cube trays, water, food coloring, pipettes or eye droppers",benefit:"Visual fluid capillary action tracking, finger pinch precision pressure"},
+  {cat:"rainy",title:"Sensory sound identification game",ages:"both",cost:"free",time:"30 min",materials:"Blindfolds, distinct household sounds (shaking coins, crinkling foil)",benefit:"Auditory discrimination accentuation, predictive memory mapping accuracy"},
+  {cat:"rainy",title:"Painter's tape floor balance balance beams",ages:"both",cost:"free",time:"30 min",materials:"Roll of low-tack painter's tape lines across carpets",benefit:"Linear foot placement tracking stability, visual boundary adherence"},
+  {cat:"rainy",title:"Bubble wrap popping step paths",ages:"both",cost:"free",time:"30 min",materials:"Sheets of packing wrap taped down to floors",benefit:"Weight shift mechanical feedback tracking, sudden auditory startle calibration"},
+  {cat:"rainy",title:"DIY plastic cup pyramid demo derby",ages:"both",cost:"low",time:"45 min",materials:"100 plastic solo cups, tennis balls",benefit:"Gravity architecture alignment tracking, rapid target strike velocity"},
+  {cat:"rainy",title:"Foil wrapping surprise treasure unwrapping",ages:"both",cost:"free",time:"30–45 min",materials:"Aluminum foil scraps, small plastic toys wrapped inside",benefit:"Manual extraction finger tensile stretching, finger dexterity exploration"},
+  {cat:"rainy",title:"Paper plate ring toss crafting",ages:"both",cost:"free",time:"45 min",materials:"Paper plates with center circles cut out, empty paper towel tube base",benefit:"Toss trajectory optimization metrics, manual plate slicing geometry"},
+  {cat:"rainy",title:"Indoor shadow wall tracing profiles",ages:"both",cost:"free",time:"30–45 min",materials:"Bright lamp, dark wall surface, large poster board sheets, markers",benefit:"Anatomical proportion silhouette mapping, static shadow capture observation"},
+  {cat:"rainy",title:"Bath tub glowing color rave",ages:"both",cost:"low",time:"45 min",materials:"Bathtub filled with warm water, waterproof glow sticks, overhead lights turned off",benefit:"Atmospheric sensory calibration transition, floating refraction tracking exploration",safety:"Never leave children unattended in bath tub environment under any circumstances"},
+  {cat:"rainy",title:"Post-it note target swat board",ages:"both",cost:"free",time:"30 min",materials:"Colorful Post-it notes with numbers/letters affixed to walls, fly swatters",benefit:"Visual scanning speed activation, targeted tool percussive extension control"},
+  {cat:"rainy",title:"Paper bag animal puppet creation",ages:"both",cost:"free",time:"1 hr",materials:"Lunch size brown paper bags, yarn scraps, markers, glue sticks",benefit:"Character narrative formulation framework, fine motor layering logic"},
+  {cat:"rainy",title:"Yarn web room navigation puzzle",ages:"both",cost:"free",time:"45–60 min",materials:"Roll of craft yarn wound around table legs and chairs horizontally",benefit:"Geometric spatial clearance tracking, under-over whole-body coordination movement"},
+  {cat:"rainy",title:"Button sorting muffin tin matrix",ages:"both",cost:"free",time:"30–45 min",materials:"Muffin baking pan, large assorted mixed buttons collection",benefit:"Visual criteria grouping taxonomy sorting, targeted drop fine motor focus"},
+  {cat:"rainy",title:"DIY playdough printing stamp studios",ages:"both",cost:"free",time:"45 min",materials:"Homemade dough sheets, assorted textural plastic household stamps",benefit:"Inversion stamp texture relief inspection, depth imprint mechanics exploration"},
+  {cat:"rainy",title:"Cookie sheet magnet puzzle structures",ages:"both",cost:"free",time:"30–45 min",materials:"Metal cookie baking sheets, colorful plastic refrigerator magnetic letter fonts",benefit:"Friction vector shift tracking, alphabetical shape categorization exercises"},
+  {cat:"rainy",title:"Indoor sensory dry pasta bins",ages:"both",cost:"low",time:"1 hr",materials:"Large tub, dried macaroni pasta, measuring cups, plastic funnel kits",benefit:"Auditory rattle pour feedback loops, dry fluid volume movement estimations"},
+  {cat:"rainy",title:"Cardboard ramp car speed trials",ages:"both",cost:"free",time:"45–60 min",materials:"Long cardboard panels, blocks for elevation adjustment, diecast cars",benefit:"Gravity acceleration slope metric testing, structural tracking configuration alignment"},
+  {cat:"rainy",title:"Tablecloth interior den fortress layout",ages:"both",cost:"free",time:"1–2 hrs",materials:"Large dining table, floor sweeping sheets/tablecloths, floor cushions",benefit:"Enclosed private space psychological soothing sanctuary, cozy storytelling localization"},
+  {cat:"rainy",title:"Dry erase window sketching glass art",ages:"both",cost:"low",time:"45 min",materials:"Dry erase markers, home window panes or patio slider doors",benefit:"Transparent background scale drawing layout novelty, effortless arm wipe sweeping"},
+  {cat:"rainy",title:"Flashlight beam wall target tag",ages:"both",cost:"free",time:"30 min",materials:"Two flashlights tracking across dimmed ceiling panels",benefit:"Visual focus rapid tracking agility, non-impact targeting synchronization kinetics"},
+  {cat:"rainy",title:"Sponge water transfers fine motor tracking",ages:"both",cost:"free",time:"30 min",materials:"Two kitchen bowls, one filled with water, large porous vehicle sponge",benefit:"Hand compression muscle contraction building, liquid balance load shifting tracker"},
+  {cat:"rainy",title:"Toy animal matching foot step footprints prints",ages:"both",cost:"free",time:"45 min",materials:"Plastic toy animals, small rolled flat ink pads or washable paint sheets, paper",benefit:"Anatomical structural imprint signature checks, pattern tracking correspondence logic"},
+
+  // OUTINGS
+  {cat:"outing",title:"Local nature center or state park",ages:"both",cost:"low",time:"Half day",materials:"Snacks, water, sunscreen",benefit:"Environmental education, physical activity, expanded world view"},
+  {cat:"outing",title:"Children's museum",ages:"both",cost:"splurge",time:"Half day",materials:"Admission fee",benefit:"Hands-on STEM, social exposure, curiosity-driven learning"},
+  {cat:"outing",title:"Library summer reading program",ages:"both",cost:"free",time:"Weekly check-ins",materials:"Library card",benefit:"Reading motivation, community belonging, reward-based goal setting"},
+  {cat:"outing",title:"Pottery or art class (7-yr-old)",ages:"sep",cost:"splurge",time:"1–2 hrs per class",materials:"Class fee",benefit:"Focused skill development, instructor feedback, peer learning"},
+  {cat:"outing",title:"Pool day or swimming lessons",ages:"both",cost:"low",time:"1–2 hrs",materials:"Swim gear",benefit:"Water safety — critical life skill — endurance, confidence",safety:"3-yr-old requires active water supervision"},
+  {cat:"outing",title:"Planetarium or science museum",ages:"both",cost:"splurge",time:"Half day",materials:"Admission",benefit:"STEM inspiration, wonder and curiosity, real-world learning"},
+  {cat:"outing",title:"Pick-your-own farm",ages:"both",cost:"low",time:"Half day",materials:"Buckets, spending money for produce",benefit:"Food literacy, agricultural awareness, real-world math"},
+  {cat:"outing",title:"Local theater or puppet show",ages:"both",cost:"low",time:"1.5–2 hrs",materials:"Ticket cost",benefit:"Arts exposure, narrative comprehension, cultural broadening"},
+  {cat:"outing",title:"Zoo or nature preserve",ages:"both",cost:"splurge",time:"Half–full day",materials:"Admission, snacks, sunscreen",benefit:"Animal science, vocabulary, sustained curiosity"},
+  {cat:"outing",title:"Bowling or mini golf outing",ages:"both",cost:"low",time:"1.5–2 hrs",materials:"Admission/shoe rental",benefit:"Hand-eye coordination, turn-taking, score keeping (real math)"},
+  {cat:"outing",title:"Aquarium visit",ages:"both",cost:"splurge",time:"Half day",materials:"Admission",benefit:"Marine science, visual vocabulary, sense of wonder"},
+  {cat:"outing",title:"Community volunteer project",ages:"both",cost:"free",time:"2–3 hrs",materials:"Varies by project",benefit:"Empathy, civic responsibility, real-world purpose — models values explicitly"},
+  {cat:"outing",title:"Splash pad park safari",ages:"both",cost:"free",time:"1–2 hrs",materials:"Towels, water shoes, sunscreen",benefit:"Social play dynamics, heat regulation, confidence with moving water",safety:"Watch for slippery surfaces near water fountains"},
+  {cat:"outing",title:"Trampoline park morning bounce",ages:"both",cost:"splurge",time:"1–2 hrs",materials:"Admission fee, grip socks",benefit:"Proprioceptive sensory input, core strength development, balance control",safety:"Ensure 3-yr-old remains strictly inside the dedicated toddler zone"},
+  {cat:"outing",title:"Fire station visit",ages:"both",cost:"free",time:"45–60 min",materials:"None (call ahead for public hours)",benefit:"Civic awareness, public safety education, community connection"},
+  {cat:"outing",title:"Public botanical greenhouse explore",ages:"both",cost:"low",time:"1–2 hrs",materials:"Camera or notebook, magnifying glass",benefit:"Sensory plant identification, microclimate study, ecosystem appreciation"},
+  {cat:"outing",title:"Local pet supply store 'safari'",ages:"both",cost:"free",time:"30–45 min",materials:"None",benefit:"Observation of smaller live animals (fish, birds), empathy coaching, community navigation"},
+  {cat:"outing",title:"Airport viewing lot flight tracking",ages:"both",cost:"free",time:"1 hr",materials:"Binoculars, car snacks, printed log sheet",benefit:"7-yr-old: tracking destinations and logistics math; 3-yr-old: heavy machinery vocabulary and scale observation"},
+  {cat:"outing",title:"Local fire tower lookouts trail hiking",ages:"both",cost:"free",time:"2–3 hrs",materials:"Sturdy trail footwear, insect protective hydration packs",benefit:"Topographical depth perspective evaluation, endurance stamina foundation",safety:"Hold hand of 3-yr-old firmly along steep ridge lines"},
+  {cat:"outing",title:"Public transportation urban rail expedition",ages:"both",cost:"low",time:"1–2 hrs",materials:"Transit ticket passes",benefit:"Public utility operational logistics literacy, social environment acclimation"},
+  {cat:"outing",title:"State history historical homestead display houses",ages:"both",cost:"low",time:"2 hrs",materials:"Entry admission passes",benefit:"Temporal heritage transformation context tracing, lifestyle comparison awareness"},
+  {cat:"outing",title:"Hardware workshop public building clinics",ages:"sep",cost:"free",time:"1 hr",materials:"Pre-registered corporate craft wood build kit boxes",benefit:"7-yr-old: tool handling precision mechanics; 3-yr-old: tactile alignment tracking"},
+  {cat:"outing",title:"Rooftop downtown garage architectural viewing",ages:"both",cost:"free",time:"45 min",materials:"Parked automobile access clearance",benefit:"Urban bird's eye perspective scaling exploration, grid orientation structural checks",safety:"Maintain absolute interior car central placement bounds"},
+  {cat:"outing",title:"Public municipal park sculpture lawn hunt",ages:"both",cost:"free",time:"1–2 hrs",materials:"Clues tracking list prints",benefit:"Artistic dimension spatial scale analysis, abstract concept discussion mapping"},
+  {cat:"outing",title:"State agricultural university farm pastures",ages:"both",cost:"free",time:"1.5 hrs",materials:"Open access footwear, clean towels",benefit:"Animal biological growth classification, agrarian infrastructure system views"},
+  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail@tailwind utilities;"},
+  {cat:"outing",title:"Fish hatchery conservation stream visit",ages:"both",cost:"free",time:"1.5 hrs",materials:"Quarter coins for pelleted commercial fish food dispensers",benefit:"Aquatic bio-cycle school population tracking, ecological caretaking models"},
+  {cat:"outing",title:"Local architectural residential walking inspection",ages:"both",cost:"free",time:"45 min",materials:"Notebook sketching layout pads",benefit:"Structural styling identification metrics, regional layout geometry comparisons"},
+  {cat:"outing",title:"Historical cemetery emblem icon charting",ages:"sep",cost:"free",time:"1 hr",materials:"Crayon wax, thick butcher paper rolls",benefit:"7-yr-old: lineage date chronology logic tracking; 3-yr-old: stone structural relief friction rubbings"},
+  {cat:"outing",title:"Community garden plot cooperative harvest help",ages:"both",cost:"free",time:"1–2 hrs",materials:"Gardening work gloves, collection baskets",benefit:"Agro-ecosystem preservation contribution values, communal operational interaction models"},
+  {cat:"outing",title:"Shopping mall interior floor exercise track walking",ages:"both",cost:"free",time:"1.5 hrs",materials:"Comfortable running shoes",benefit:"Climate controlled large motor distance velocity tracking, scale environment processing"},
+  {cat:"outing",title:"Local university natural history fossil displays",ages:"both",cost:"free",time:"1.5 hrs",materials:"Sketchbooks, pencils",benefit:"Paleontological skeletal matrix visualization, historic bio-scale framework processing"},
+  {cat:"outing",title:"Suburban model home interior spatial showcase",ages:"both",cost:"free",time:"45 min",materials:"Clean apparel requirements",benefit:"Interior architectural design sequencing parsing, floor plan navigation orientation"},
+  {cat:"outing",title:"Local plant nursery greenhouse flora selection",ages:"both",cost:"free",time:"1.5 hrs",materials:"Comfortable walking apparel",benefit:"Olfactory botany discrimination processing, plant leaf shape comparison analysis"},
+  {cat:"outing",title:"Public state library rare book text displays",ages:"both",cost:"free",time:"1.5 hrs",materials:"Library identification credentials",benefit:"Historical communication transcription evolution awareness, low-light environmental adaptation"},
+  {cat:"outing",title:"Municipal water treatment facility overlook structures",ages:"both",cost:"free",time:"45 min",materials:"Binoculars",benefit:"Public infrastructure flow engineering tracing, sanitary community utility understanding"},
+  {cat:"outing",title:"Regional commercial bakery processing visibility glass",ages:"both",cost:"free",time:"30–45 min",materials:"Snack spending money",benefit:"Industrial manufacturing automation loop visualization, division of labor optimization models"},
+  {cat:"outing",title:"Local custom auto dealership vehicle yard tour",ages:"both",cost:"free",time:"45 min",materials:"None",benefit:"Mechanical functional form design exploration, machinery scaling and categorization logic"},
+  {cat:"outing",title:"Municipal outdoor stadium amphitheater sound testing",ages:"both",cost:"free",time:"45 min",materials:"Eco amplification vocal toys",benefit:"Acoustic sound dispersion perimeter projection analysis, open air wave physics"},
+  {cat:"outing",title:"Local used specialty bookstore browsing rows",ages:"both",cost:"free",time:"1.5 hrs",materials:"Small book exchange tokens",benefit:"Literary title search sequence indexing sorting, curated text artifact value mapping"},
+  {cat:"outing",title:"Suburban pet rescue shelter cat display rooms",ages:"both",cost:"free",time:"45 min",materials:"Sanitizer wipes",benefit:"Domestic animal behaviors socialization tracking, delicate empathy touch training"},
+  {cat:"outing",title:"Local farmers roadside truck produce markets",ages:"both",cost:"low",time:"45 min",materials:"Cash coins wallet pocket",benefit:"Microeconomic direct merchant trade tracking, agrarian cultivation mapping analysis"},
+  {cat:"outing",title:"Regional construction machinery yard outer fence watch",ages:"both",cost:"free",time:"45 min",materials:"Pocket vehicle identifier guide sheets",benefit:"Heavy mechanical engineering system scale analysis, kinematic lever function views"},
+  {cat:"outing",title:"Local dynamic community spray park loop paths",ages:"both",cost:"free",time:"1–2 hrs",materials:"Swimwear layer, drying cloths",benefit:"Hydrodynamic random pressure burst adaptation, peer group socialization adjustments"},
+  {cat:"outing",title:"Municipal pedestrian river walk paved boardwalk loops",ages:"both",cost:"free",time:"1–1.5 hrs",materials:"Strollers or kids foot push scooters",benefit:"Ecosystem stream interface tracking, continuous stride rhythmic pace optimization"},
+  {cat:"outing",title:"Local customized gourmet doughnut assembly kitchens",ages:"both",cost:"low",time:"30 min",materials:"Pastry ordering budget",benefit:"Culinary item layering step tracking, flavor profiles mix optimization matching"},
+  {cat:"outing",title:"Public multi-tier city library kids level play zones",ages:"both",cost:"free",time:"1.5 hrs",materials:"Library card registration",benefit:"Curated spatial literacy interaction, peer play sharing etiquette synchronization"},
+  {cat:"outing",title:"Suburban dedicated mini kid playground cluster parks",ages:"both",cost:"free",time:"1–2 hrs",materials:"Outdoor hydration packs, protection screens",benefit:"Varied obstacle system agility mastery tracking, gross motor layout processing"},
+  {cat:"outing",title:"Local commercial craft fair outdoor open markets",ages:"both",cost:"free",time:"1.5 hrs",materials:"Comfortable walking shoes",benefit:"Artisan materials fabrication identity exposure, sensory cultural display variation processing"},
+  {cat:"outing",title:"Public safety police fleet vehicle compound overlook",ages:"both",cost:"free",time:"30 min",materials:"None",benefit:"Civic emergency protection system structural literacy, utility transport categorization"}
 ];
 
-// STATE INITIALIZERS
-function loadStorageData() {
-  try {
-    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
-    if (!Array.isArray(savedTitles)) savedTitles = [];
-  } catch(e) {
-    savedTitles = [];
-  }
-  try {
-    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
-    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
-  } catch(e) {
-    hiddenTitles = [];
-  }
-  try {
-    routineSchedule = JSON.parse(localStorage.getItem('summer_routine_schedule')) || {};
-    if (typeof routineSchedule !== 'object' || routineSchedule === null) routineSchedule = {};
-  } catch(e) {
-    routineSchedule = {};
-  }
-  
-  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
-  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
-}
-
-loadStorageData();
-
-// --- STATE MANAGEMENT - FIRESTORE SYNC DIRECT ---
-async function loadFirestoreData() {
-  if (!currentUser || !db) return;
-  try {
-    // 1. Saved Titles
-    const savedQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles'));
-    savedTitles = [];
-    savedQuery.forEach(doc => {
-      savedTitles.push(doc.id);
-    });
-
-    // 2. Hidden Titles
-    const hiddenQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles'));
-    hiddenTitles = [];
-    hiddenQuery.forEach(doc => {
-      hiddenTitles.push(doc.id);
-    });
-
-    // 3. Custom activities
-    const customQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities'));
-    firestoreCustomActivities = [];
-    customQuery.forEach(doc => {
-      firestoreCustomActivities.push(doc.data());
-    });
-
-    // 4. Routine Schedule Mapping
-    const routineQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule'));
-    routineSchedule = {};
-    routineQuery.forEach(doc => {
-      routineSchedule[doc.id] = doc.data().assignedActivity || "";
-    });
-    
-    updateCloudStatusBadge(true);
-  } catch (e) {
-    console.error("Firestore Loading Failed:", e);
-    updateCloudStatusBadge(false);
-  }
-}
-
-function loadLocalStorageFallback() {
-  loadStorageData();
-}
-
-function updateCloudStatusBadge(isOnline) {
-  const badge = document.getElementById('db-pills');
-  const statusText = document.getElementById('db-status');
-  if (isOnline) {
-    if (badge) badge.className = "cloud-status synced";
-    if (statusText) statusText.innerText = "Cloud Synced";
-  } else {
-    if (badge) badge.className = "cloud-status";
-    if (statusText) statusText.innerText = "Offline Mode";
-  }
-}
-
 // --- INITIALIZE STORAGE & AUTH ENGINES ---
+// Support local mock override OR platform native injection variables
 const activeFirebaseConfig = myLocalFirebaseConfig || (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
 
 if (hasFirebaseConfig && activeFirebaseConfig) {
   try {
     const app = initializeApp(activeFirebaseConfig);
-    const analytics = getAnalytics(app);
     auth = getAuth(app);
     db = getFirestore(app);
 
@@ -1142,7 +1162,14 @@ if (hasFirebaseConfig && activeFirebaseConfig) {
       }
     };
 
-    initAuth().catch(console.error);
+    initAuth().catch((err) => {
+      console.warn("Custom token auth sequence bypassed or anonymous config missing. Falling back to local storage.", err);
+      // Clean recovery - load offline memory structures and drop status badge gracefully
+      loadLocalStorageFallback();
+      updateCloudStatusBadge(false);
+      renderPlanner();
+      renderRoutine();
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -1167,12 +1194,20 @@ if (hasFirebaseConfig && activeFirebaseConfig) {
 } else {
   loadLocalStorageFallback();
   updateCloudStatusBadge(false);
+  // Ensure the page draws even if Firebase configuration is completely blank
+  setTimeout(() => {
+    renderPlanner();
+    renderRoutine();
+  }, 100);
 }
 
+// Merges baseline activities with manually keyed parents creations
 function getMergedActivities() {
   if (currentUser && db) {
     return [...baseActivities, ...firestoreCustomActivities];
   }
+  
+  // LocalStorage Fallback Routine
   let customList = [];
   try {
     customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
@@ -1184,7 +1219,7 @@ function getMergedActivities() {
   return [...baseActivities, ...customList];
 }
 
-// --- EVENT ROUTING CHANNELS ---
+// --- PROGRAMMATIC EVENT DELEGATION AGENTS ---
 function handleHeartClick(event, btnElement) {
   if (event) {
     event.stopPropagation();
@@ -1197,6 +1232,7 @@ function handleHeartClick(event, btnElement) {
   toggleHeart(title, isCustom);
 }
 
+// Globalized delegation binders
 function handleHideClick(event, btnElement) {
   if (event) {
     event.stopPropagation();
@@ -1208,217 +1244,13 @@ function handleHideClick(event, btnElement) {
   toggleHide(title);
 }
 
+// Card body flip logic
 function handleCardBodyClick(event, cardInnerElement) {
   if (event.target.closest('.action-btn')) return;
   cardInnerElement.classList.toggle('flipped');
 }
 
-// --- ROUTINE PLANNER LOGIC MAPPING ---
-function renderRoutine() {
-  const root = document.getElementById('routine-week-root');
-  if (!root) return;
-
-  let html = "";
-  
-  daysOfWeek.forEach(day => {
-    // Lookup saved activity states
-    const assignedBurn = routineSchedule[`${day}_burn`] || "";
-    const assignedSplit = routineSchedule[`${day}_split`] || "";
-    const assignedJoint = routineSchedule[`${day}_joint`] || "";
-
-    html += `
-      <div class="day-card" data-day="${day}">
-        <div class="day-header">${day}</div>
-        
-        <!-- MORNING ANCHOR (Standard Static) -->
-        <div class="time-block">
-          <div class="time-label">8:00 - 9:00 AM</div>
-          <div class="block-content tier-anchor">
-            <div class="block-title">Morning Anchor</div>
-            <span class="placeholder-text">Breakfast & prep chores</span>
-          </div>
-        </div>
-
-        <!-- HIGH ENERGY OUTING (Customizable Block) -->
-        <div class="time-block">
-          <div class="time-label">9:00 - 10:30 AM</div>
-          <div class="block-content tier-burn" onclick="openAssignmentModal('${day}_burn', 'burn')">
-            <div class="block-title">High-Energy Outing</div>
-            ${assignedBurn ? `
-              <div class="assigned-activity">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--outing)"><circle cx="12" cy="12" r="10"/></svg>
-                ${assignedBurn}
-              </div>
-            ` : `<span class="placeholder-text">➔ Tap to assign an Outdoor or Outing card</span>`}
-          </div>
-        </div>
-
-        <!-- SPLIT-FOCUS BLOCK (Customizable Block) -->
-        <div class="time-block">
-          <div class="time-label">11:00 - 12:00 PM</div>
-          <div class="block-content tier-split" onclick="openAssignmentModal('${day}_split', 'split')">
-            <div class="block-title">Split-Focus Block</div>
-            ${assignedSplit ? `
-              <div class="assigned-activity">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--sky)"><circle cx="12" cy="12" r="10"/></svg>
-                ${assignedSplit}
-              </div>
-            ` : `
-              <div class="split-layout">
-                <div class="split-child"><strong>7yo Focus</strong>Tap to assign split-focus parallel card</div>
-                <div class="split-child"><strong>3yo Sensory</strong>Spreads sensory coordination play</div>
-              </div>
-            `}
-          </div>
-        </div>
-
-        <!-- NON-NEGOTIABLE REST (Standard Static) -->
-        <div class="time-block">
-          <div class="time-label">1:00 - 3:00 PM</div>
-          <div class="block-content tier-rest">
-            <div class="block-title">Quiet Rest Hour</div>
-            <span class="placeholder-text">3yo Nap / 7yo Independent quiet reading</span>
-          </div>
-        </div>
-
-        <!-- JOINT PROJECT BLOCK (Customizable Block) -->
-        <div class="time-block">
-          <div class="time-label">3:30 - 4:30 PM</div>
-          <div class="block-content tier-joint" onclick="openAssignmentModal('${day}_joint', 'joint')">
-            <div class="block-title">Joint Play Project</div>
-            ${assignedJoint ? `
-              <div class="assigned-activity">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--leaf)"><circle cx="12" cy="12" r="10"/></svg>
-                ${assignedJoint}
-              </div>
-            ` : `<span class="placeholder-text">➔ Tap to assign a Joint Indoor or Outdoor card</span>`}
-          </div>
-        </div>
-
-      </div>
-    `;
-  });
-
-  root.innerHTML = html;
-}
-
-// Opens the customized card assignment overlay filter lists dynamically based on type of block selected
-function openAssignmentModal(blockId, blockType) {
-  activeSelectionBlock = blockId;
-  const modal = document.getElementById('assignment-modal');
-  const listRoot = document.getElementById('modal-card-list');
-  const titleEl = document.getElementById('modal-block-title');
-  const descEl = document.getElementById('modal-block-desc');
-  
-  if (!modal || !listRoot) return;
-
-  // Sync title text
-  const rawDay = blockId.split('_')[0];
-  titleEl.innerText = `${rawDay} - Block Assignment`;
-
-  const pool = getMergedActivities().filter(a => {
-    // Filter out hidden cards
-    if (hiddenTitles.includes(a.title)) return false;
-
-    // Filter by Block Type expectations
-    if (blockType === 'burn') {
-      return a.cat === 'outdoor' || a.cat === 'outing';
-    } else if (blockType === 'split') {
-      return a.ages === 'sep'; // Parallel activities are ideal for split
-    } else if (blockType === 'joint') {
-      return a.ages === 'both'; // Joint blocks benefit from works together cards
-    }
-    return true;
-  });
-
-  if (pool.length === 0) {
-    listRoot.innerHTML = `<p class="placeholder-text">No active cards found in this category. Go to the Planner and unhide some!</p>`;
-  } else {
-    let listHtml = `
-      <div class="selection-item" onclick="assignActivityToBlock('')" style="border-color:#e88c8c; background:#fff2f2;">
-        <span style="color:#d32f2f; font-weight:600;">🗑️ Clear Assigned Activity</span>
-      </div>
-    `;
-    
-    // Sort unhidden cards so Liked/Hearted ones show at the very top of the modal!
-    pool.sort((x, y) => {
-      const xLiked = savedTitles.includes(x.title);
-      const yLiked = savedTitles.includes(y.title);
-      if (xLiked && !yLiked) return -1;
-      if (!xLiked && yLiked) return 1;
-      return 0;
-    });
-
-    pool.forEach(card => {
-      const isLiked = savedTitles.includes(card.title);
-      const isCurrentlyAssigned = routineSchedule[blockId] === card.title;
-
-      listHtml += `
-        <div class="selection-item ${isCurrentlyAssigned ? 'selected' : ''}" onclick="assignActivityToBlock('${card.title.replace(/'/g, "\\'")}')">
-          <div>
-            <div style="font-weight:600; font-size:13px;">${isLiked ? '❤️ ' : ''}${card.title}</div>
-            <div style="font-size:10px; color:#888; margin-top:2px; text-transform:uppercase;">${card.cat} • ${card.time}</div>
-          </div>
-          ${isCurrentlyAssigned ? `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--leaf)"><polyline points="20 6 9 17 4 12"/></svg>
-          ` : ''}
-        </div>
-      `;
-    });
-
-    listRoot.innerHTML = listHtml;
-  }
-
-  modal.style.display = 'flex';
-}
-
-function closeAssignmentModal() {
-  const modal = document.getElementById('assignment-modal');
-  if (modal) modal.style.display = 'none';
-  activeSelectionBlock = null;
-}
-
-async function assignActivityToBlock(activityTitle) {
-  if (!activeSelectionBlock) return;
-  
-  if (activityTitle === "") {
-    delete routineSchedule[activeSelectionBlock];
-    
-    // Cloud sync clear action
-    if (currentUser && db) {
-      try {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule', activeSelectionBlock));
-      } catch(e) {
-        console.error("Cloud routine delete failed:", e);
-      }
-    }
-  } else {
-    routineSchedule[activeSelectionBlock] = activityTitle;
-    
-    // Cloud Sync Write Action
-    if (currentUser && db) {
-      try {
-        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule', activeSelectionBlock), {
-          assignedActivity: activityTitle
-        });
-      } catch(e) {
-        console.error("Cloud routine write failed:", e);
-      }
-    }
-  }
-
-  // Backup offline localStorage
-  try {
-    localStorage.setItem('summer_routine_schedule', JSON.stringify(routineSchedule));
-  } catch(e) {
-    console.warn("Storage write failed:", e);
-  }
-
-  closeAssignmentModal();
-  renderRoutine();
-}
-
-// --- VIEW NAVIGATION CHANNELS ---
+// --- VIEW NAVIGATION ENGINES ---
 function switchAppView(viewId) {
   try {
     const plannerView = document.getElementById('view-planner');
@@ -1695,7 +1527,7 @@ function renderPlanner() {
                   <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 </button>` : ''}
 
-              <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both' : 'Age-sep'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
+              <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat === 'outing' ? 'Outing' : a.cat.charAt(0).toUpperCase() + a.cat.slice(1)}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both ages' : 'Age-specific'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
               <div class="card-title">${a.title}</div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${a.time || "N/A"}</span></div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${a.materials || "N/A"}</span></div>
@@ -1716,7 +1548,7 @@ function renderPlanner() {
     });
 
     if (matches === 0) {
-      html = `<div class="no-results">${plannerTab === 'plan' ? "❤️ Your Plan is Empty<p>Find cards in the explorer and tap the heart!</p>" : (plannerTab === 'hidden' ? "🗑 No Hidden Cards" : "No matches found.")}</div>`;
+      html = `<div class="no-results">${plannerTab === 'plan' ? "❤️ Your Plan is Empty<p>Go to the Activities tab and heart a card to build your plan!</p>" : (plannerTab === 'hidden' ? "🗑 No Hidden Cards" : "No matches found.")}</div>`;
     }
     root.innerHTML = html;
   } catch(e) {
@@ -1775,7 +1607,7 @@ function spinRandomizer() {
               <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="handleHeartClick(event, this)">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
               </button>
-              <div class="card-tags"><span class="tag cat-${pick.cat}">${pick.cat}</span><span class="tag ages-${pick.ages}">${pick.ages}</span><span class="tag ${costClass(pick.cost)}">${costLabel(pick.cost)}</span></div>
+              <div class="card-tags"><span class="tag cat-${pick.cat}">${pick.cat === 'outing' ? 'Outing' : pick.cat.charAt(0).toUpperCase() + pick.cat.slice(1)}</span><span class="tag ages-${pick.ages}">${pick.ages === 'both' ? 'Both ages' : 'Age-specific'}</span><span class="tag ${costClass(pick.cost)}">${costLabel(pick.cost)}</span></div>
               <div class="card-title" style="margin-top:6px;">${pick.title}</div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${pick.time || "N/A"}</span></div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${pick.materials || "N/A"}</span></div>
@@ -1880,7 +1712,7 @@ async function saveCustomCard(event) {
 
     // Success response sequence
     if (successToast) {
-      successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Planner...`;
+      successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Activities...`;
       successToast.style.display = 'block';
     }
 
@@ -1896,6 +1728,211 @@ async function saveCustomCard(event) {
   }
 }
 
+// --- ROUTINE PLANNER LOGIC MAPPING ---
+function renderRoutine() {
+  const root = document.getElementById('routine-week-root');
+  if (!root) return;
+
+  let html = "";
+  
+  daysOfWeek.forEach(day => {
+    // Lookup saved activity states
+    const assignedBurn = routineSchedule[`${day}_burn`] || "";
+    const assignedSplit = routineSchedule[`${day}_split`] || "";
+    const assignedJoint = routineSchedule[`${day}_joint`] || "";
+
+    html += `
+      <div class="day-card" data-day="${day}">
+        <div class="day-header">${day}</div>
+        
+        <!-- MORNING ANCHOR (Standard Static) -->
+        <div class="time-block">
+          <div class="time-label">8:00 - 9:00 AM</div>
+          <div class="block-content tier-anchor">
+            <div class="block-title">Morning Anchor</div>
+            <span class="placeholder-text">Breakfast & prep chores</span>
+          </div>
+        </div>
+
+        <!-- HIGH ENERGY OUTING (Customizable Block) -->
+        <div class="time-block">
+          <div class="time-label">9:00 - 10:30 AM</div>
+          <div class="block-content tier-burn" onclick="openAssignmentModal('${day}_burn', 'burn')">
+            <div class="block-title">High-Energy Outing</div>
+            ${assignedBurn ? `
+              <div class="assigned-activity">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--outing)"><circle cx="12" cy="12" r="10"/></svg>
+                ${assignedBurn}
+              </div>
+            ` : `<span class="placeholder-text">➔ Tap to assign an Outdoor or Outing card</span>`}
+          </div>
+        </div>
+
+        <!-- SPLIT-FOCUS BLOCK (Customizable Block) -->
+        <div class="time-block">
+          <div class="time-label">11:00 - 12:00 PM</div>
+          <div class="block-content tier-split" onclick="openAssignmentModal('${day}_split', 'split')">
+            <div class="block-title">Split-Focus Block</div>
+            ${assignedSplit ? `
+              <div class="assigned-activity">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--sky)"><circle cx="12" cy="12" r="10"/></svg>
+                ${assignedSplit}
+              </div>
+            ` : `
+              <div class="split-layout">
+                <div class="split-child"><strong>7yo Focus</strong>Tap to assign split-focus parallel card</div>
+                <div class="split-child"><strong>3yo Sensory</strong>Spreads sensory coordination play</div>
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- NON-NEGOTIABLE REST (Standard Static) -->
+        <div class="time-block">
+          <div class="time-label">1:00 - 3:00 PM</div>
+          <div class="block-content tier-rest">
+            <div class="block-title">Quiet Rest Hour</div>
+            <span class="placeholder-text">3yo Nap / 7yo Independent quiet reading</span>
+          </div>
+        </div>
+
+        <!-- JOINT PROJECT BLOCK (Customizable Block) -->
+        <div class="time-block">
+          <div class="time-label">3:30 - 4:30 PM</div>
+          <div class="block-content tier-joint" onclick="openAssignmentModal('${day}_joint', 'joint')">
+            <div class="block-title">Joint Play Project</div>
+            ${assignedJoint ? `
+              <div class="assigned-activity">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--leaf)"><circle cx="12" cy="12" r="10"/></svg>
+                ${assignedJoint}
+              </div>
+            ` : `<span class="placeholder-text">➔ Tap to assign a Joint Indoor or Outdoor card</span>`}
+          </div>
+        </div>
+
+      </div>
+    `;
+  });
+
+  root.innerHTML = html;
+}
+
+// Opens the customized card assignment overlay filter lists dynamically based on type of block selected
+function openAssignmentModal(blockId, blockType) {
+  activeSelectionBlock = blockId;
+  const modal = document.getElementById('assignment-modal');
+  const listRoot = document.getElementById('modal-card-list');
+  const titleEl = document.getElementById('modal-block-title');
+  const descEl = document.getElementById('modal-block-desc');
+  
+  if (!modal || !listRoot) return;
+
+  // Sync title text
+  const rawDay = blockId.split('_')[0];
+  titleEl.innerText = `${rawDay} - Block Assignment`;
+
+  const pool = getMergedActivities().filter(a => {
+    // Filter out hidden cards
+    if (hiddenTitles.includes(a.title)) return false;
+
+    // Filter by Block Type expectations
+    if (blockType === 'burn') {
+      return a.cat === 'outdoor' || a.cat === 'outing';
+    } else if (blockType === 'split') {
+      return a.ages === 'sep'; // Parallel activities are ideal for split
+    } else if (blockType === 'joint') {
+      return a.ages === 'both'; // Joint blocks benefit from works together cards
+    }
+    return true;
+  });
+
+  if (pool.length === 0) {
+    listRoot.innerHTML = `<p class="placeholder-text">No active cards found in this category. Go to the Activities tab and unhide some!</p>`;
+  } else {
+    let listHtml = `
+      <div class="selection-item" onclick="assignActivityToBlock('')" style="border-color:#e88c8c; background:#fff2f2;">
+        <span style="color:#d32f2f; font-weight:600;">🗑️ Clear Assigned Activity</span>
+      </div>
+    `;
+    
+    // Sort unhidden cards so Liked/Hearted ones show at the very top of the modal!
+    pool.sort((x, y) => {
+      const xLiked = savedTitles.includes(x.title);
+      const yLiked = savedTitles.includes(y.title);
+      if (xLiked && !yLiked) return -1;
+      if (!xLiked && yLiked) return 1;
+      return 0;
+    });
+
+    pool.forEach(card => {
+      const isLiked = savedTitles.includes(card.title);
+      const isCurrentlyAssigned = routineSchedule[blockId] === card.title;
+
+      listHtml += `
+        <div class="selection-item ${isCurrentlyAssigned ? 'selected' : ''}" onclick="assignActivityToBlock('${card.title.replace(/'/g, "\\'")}')">
+          <div>
+            <div style="font-weight:600; font-size:13px;">${isLiked ? '❤️ ' : ''}${card.title}</div>
+            <div style="font-size:10px; color:#888; margin-top:2px; text-transform:uppercase;">${card.cat} • ${card.time}</div>
+          </div>
+          ${isCurrentlyAssigned ? `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--leaf)"><polyline points="20 6 9 17 4 12"/></svg>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    listRoot.innerHTML = listHtml;
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeAssignmentModal() {
+  const modal = document.getElementById('assignment-modal');
+  if (modal) modal.style.display = 'none';
+  activeSelectionBlock = null;
+}
+
+async function assignActivityToBlock(activityTitle) {
+  if (!activeSelectionBlock) return;
+  
+  if (activityTitle === "") {
+    delete routineSchedule[activeSelectionBlock];
+    
+    // Cloud sync clear action
+    if (currentUser && db) {
+      try {
+        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule', activeSelectionBlock));
+      } catch(e) {
+        console.error("Cloud routine delete failed:", e);
+      }
+    }
+  } else {
+    routineSchedule[activeSelectionBlock] = activityTitle;
+    
+    // Cloud Sync Write Action
+    if (currentUser && db) {
+      try {
+        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule', activeSelectionBlock), {
+          assignedActivity: activityTitle
+        });
+      } catch(e) {
+        console.error("Cloud routine write failed:", e);
+      }
+    }
+  }
+
+  // Backup offline localStorage
+  try {
+    localStorage.setItem('summer_routine_schedule', JSON.stringify(routineSchedule));
+  } catch(e) {
+    console.warn("Storage write failed:", e);
+  }
+
+  closeAssignmentModal();
+  renderRoutine();
+}
+
 // --- GLOBALIZE MODULE SCOPE AGENTS FOR INLINE COMPATIBILITY ---
 window.switchAppView = switchAppView;
 window.switchPlannerTab = switchPlannerTab;
@@ -1907,6 +1944,7 @@ window.handleCardBodyClick = handleCardBodyClick;
 window.openAssignmentModal = openAssignmentModal;
 window.closeAssignmentModal = closeAssignmentModal;
 window.assignActivityToBlock = assignActivityToBlock;
+window.loadStorageData = loadStorageData; // Added missing global binding to fix the ReferenceError
 
 // Initial execution Boot
 renderPlanner();
@@ -1915,4 +1953,3 @@ renderRoutine();
 
 </body>
 </html>
-
