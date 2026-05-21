@@ -166,8 +166,6 @@ body {
   outline: none;
   width: 100%;
   -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
 }
 .form-control:focus {
   border-color: var(--sky);
@@ -451,56 +449,7 @@ body {
 
 
 <!-- ==========================================
-     VIEW 3: AI GENERATOR
-     ========================================== -->
-<div id="view-ai" class="app-view">
-  <div class="panel" style="max-width: 600px; margin: 0 auto;">
-    <div class="toast-msg" id="ai-error"></div>
-    <p style="text-align:center; font-size: 13px; color: #666; margin-bottom: 16px;">Ask Gemini to invent a brand new activity. If you ❤️ it, it saves instantly to your Planner.</p>
-    
-    <div class="filter-group" style="margin-bottom: 12px;">
-      <label>What's the vibe, theme, or supply?</label>
-      <input type="text" class="form-control" id="ai-prompt" placeholder="e.g., messy art, calm down, sensory bins...">
-    </div>
-    
-    <div class="filters-grid" style="margin-bottom: 16px;">
-      <div class="filter-group">
-        <label>Category</label>
-        <select class="form-control" id="ai-cat">
-          <option value="outdoor">🌤 Outdoor</option>
-          <option value="indoor">🏠 Indoor</option>
-          <option value="rainy">🌧 Rainy</option>
-          <option value="outing">📍 Outing</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Dynamic</label>
-        <select class="form-control" id="ai-style">
-          <option value="both">Works Together</option>
-          <option value="sep">Parallel Tasks</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Budget</label>
-        <select class="form-control" id="ai-cost">
-          <option value="free">Free</option>
-          <option value="low">Low Cost</option>
-          <option value="splurge">Splurge</option>
-        </select>
-      </div>
-    </div>
-    
-    <button class="primary-btn" id="ai-btn" onclick="generateAI()">🧠 Generate with Gemini</button>
-  </div>
-
-  <div class="center-display" id="ai-root">
-    <p class="placeholder-text">Type your prompt above to create magic.</p>
-  </div>
-</div>
-
-
-<!-- ==========================================
-     VIEW 4: CREATE CUSTOM CARD (NEW!)
+     VIEW 3: CREATE CUSTOM CARD
      ========================================== -->
 <div id="view-custom" class="app-view">
   <div class="panel" style="max-width: 700px; margin: 0 auto;">
@@ -604,12 +553,6 @@ body {
     </svg>
     Randomizer
   </button>
-  <button class="nav-btn" onclick="switchAppView('ai')" id="nav-ai">
-    <svg class="nav-icon" viewBox="0 0 24 24">
-      <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
-    </svg>
-    AI Generator
-  </button>
   <button class="nav-btn" onclick="switchAppView('custom')" id="nav-custom">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="10"></circle>
@@ -621,9 +564,6 @@ body {
 </nav>
 
 <script>
-// --- GEMINI API CONFIG ---
-const apiKey = "AIzaSyD20mqCW2qiZBneX_IdgxauwdBUdB9bi9g";
-
 // --- MASTER DATASET (200 Items) ---
 const baseActivities = [
   // OUTDOOR
@@ -768,7 +708,7 @@ const baseActivities = [
   {cat:"rainy",title:"Paper plate ring toss crafting",ages:"both",cost:"free",time:"45 min",materials:"Paper plates with center circles cut out, empty paper towel tube base",benefit:"Toss trajectory optimization metrics, manual plate slicing geometry"},
   {cat:"rainy",title:"Indoor shadow wall tracing profiles",ages:"both",cost:"free",time:"30–45 min",materials:"Bright lamp, dark wall surface, large poster board sheets, markers",benefit:"Anatomical proportion silhouette mapping, static shadow capture observation"},
   {cat:"rainy",title:"Bath tub glowing color rave",ages:"both",cost:"low",time:"45 min",materials:"Bathtub filled with warm water, waterproof glow sticks, overhead lights turned off",benefit:"Atmospheric sensory calibration transition, floating refraction tracking exploration",safety:"Never leave children unattended in bath tub environment under any circumstances"},
-  {cat:"rainy",title:"Post-it note target swat board",ages:"both",cost:"free",time:"30 min",materials:"Colorful Post-it notes with numbers/letters affixed to walls, fly swatters",benefit:"Visual scanning speed activation, targeted tool percussion extension control"},
+  {cat:"rainy",title:"Post-it note target swat board",ages:"both",cost:"free",time:"30 min",materials:"Colorful Post-it notes with numbers/letters affixed to walls, fly swatters",benefit:"Visual scanning speed activation, targeted tool percussive extension control"},
   {cat:"rainy",title:"Paper bag animal puppet creation",ages:"both",cost:"free",time:"1 hr",materials:"Lunch size brown paper bags, yarn scraps, markers, glue sticks",benefit:"Character narrative formulation framework, fine motor layering logic"},
   {cat:"rainy",title:"Yarn web room navigation puzzle",ages:"both",cost:"free",time:"45–60 min",materials:"Roll of craft yarn wound around table legs and chairs horizontally",benefit:"Geometric spatial clearance tracking, under-over whole-body coordination movement"},
   {cat:"rainy",title:"Button sorting muffin tin matrix",ages:"both",cost:"free",time:"30–45 min",materials:"Muffin baking pan, large assorted mixed buttons collection",benefit:"Visual criteria grouping taxonomy sorting, targeted drop fine motor focus"},
@@ -856,14 +796,13 @@ function loadStorageData() {
 loadStorageData();
 
 let plannerTab = "all"; // 'all', 'plan', 'hidden'
-let currentGeneratedActivity = null;
 
 // LABELS & UTILS
 const sectionLabels = { outdoor: "🌤 Outdoor Activities", indoor: "🏠 Indoor Activities", rainy: "🌧 Rainy Day Activities", outing: "📍 Outings & Field Trips" };
 function costLabel(c) { return c === "free" ? "Free" : c === "splurge" ? "Splurge" : "Low cost"; }
 function costClass(c) { return c === "free" ? "cost-free" : c === "splurge" ? "cost-splurge" : "cost-low"; }
 
-// Merges standard + custom AI activities safely
+// Merges standard + custom activities safely
 function getMergedActivities() {
   let customList = [];
   try {
@@ -879,12 +818,10 @@ function getMergedActivities() {
 function switchAppView(viewId) {
   document.getElementById('view-planner').classList.remove('active');
   document.getElementById('view-randomizer').classList.remove('active');
-  document.getElementById('view-ai').classList.remove('active');
   document.getElementById('view-custom').classList.remove('active');
   
   document.getElementById('nav-planner').classList.remove('active');
   document.getElementById('nav-randomizer').classList.remove('active');
-  document.getElementById('nav-ai').classList.remove('active');
   document.getElementById('nav-custom').classList.remove('active');
   
   document.getElementById('view-' + viewId).classList.add('active');
@@ -912,9 +849,9 @@ function switchPlannerTab(tabId) {
 // Generate Instructions
 function generateInstructions(a) {
   if (a.steps && Array.isArray(a.steps)) {
-    let aiSteps = "";
-    a.steps.forEach(s => aiSteps += `<li>${s}</li>`);
-    return { steps: aiSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration}` };
+    let customSteps = "";
+    a.steps.forEach(s => customSteps += `<li>${s}</li>`);
+    return { steps: customSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration}` };
   }
   let steps = `<li><strong>Gather:</strong> Collect ${a.materials}.</li>`;
   if (a.cat === "outing") {
@@ -949,13 +886,9 @@ function toggleHeart(event, title, isCustom) {
     if (isCustom) {
       const exists = customActivities.some(a => a.title === title);
       if (!exists) {
-        if (currentGeneratedActivity && currentGeneratedActivity.title === title) {
-          customActivities.push(currentGeneratedActivity);
-        } else {
-          const pool = getMergedActivities();
-          const found = pool.find(a => a.title === title);
-          if (found) customActivities.push(found);
-        }
+        const pool = getMergedActivities();
+        const found = pool.find(a => a.title === title);
+        if (found) customActivities.push(found);
       }
     }
   } else {
@@ -973,11 +906,6 @@ function toggleHeart(event, title, isCustom) {
   // Conditionally refresh current view layers
   if (document.getElementById('view-planner').classList.contains('active')) {
     renderPlanner(); 
-  }
-  
-  const aiHeart = document.getElementById('ai-heart');
-  if (aiHeart && currentGeneratedActivity && currentGeneratedActivity.title === title) {
-    aiHeart.classList.toggle('active', savedTitles.includes(title));
   }
 }
 
@@ -1161,158 +1089,6 @@ function spinRandomizer() {
       btn.disabled = false;
     }
   }, 100);
-}
-
-// --- AI GENERATOR ---
-async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
-  try {
-    const r = await fetch(url, options);
-    if (!r.ok) {
-      const errorText = await r.text().catch(() => "");
-      const errObj = new Error(`HTTP ${r.status}: ${r.statusText || ""}. ${errorText}`);
-      errObj.status = r.status;
-      throw errObj;
-    }
-    return await r.json();
-  } catch (e) {
-    if (e.status && e.status >= 400 && e.status < 500) {
-      throw e;
-    }
-    if (retries <= 1) throw e;
-    await new Promise(res => setTimeout(res, delay));
-    return fetchWithRetry(url, options, retries - 1, delay * 2);
-  }
-}
-
-async function generateAI() {
-  const btn = document.getElementById('ai-btn');
-  const err = document.getElementById('ai-error');
-  const root = document.getElementById('ai-root');
-  
-  const prompt = document.getElementById('ai-prompt').value.trim();
-  const c = document.getElementById('ai-cat').value;
-  const s = document.getElementById('ai-style').value;
-  const cost = document.getElementById('ai-cost').value;
-
-  if (!prompt) { err.innerText = "Please type a theme or item!"; err.style.display = 'block'; return; }
-  
-  err.style.display = 'none';
-  btn.disabled = true;
-  root.innerHTML = `<div class="spinner"></div><div class="loading-text">Concocting recipe via Gemini AI...</div>`;
-
-  const sys = `You are a child development expert, sensory motor occupational therapist, and creative play designer. Generate a summer activity card for a 3-year-old and a 7-year-old based on the prompt. You must respond with a strictly valid JSON object matching the requested schema. No markdown backticks, no comments, and no trailing characters.`;
-  const usr = `Create a custom summer play card. Vibe/Supply: "${prompt}". Category: ${c}. Dynamic style: ${s}. Cost tier: ${cost}.`;
-
-  const payload = {
-    contents: [{
-      parts: [
-        { text: usr }
-      ]
-    }],
-    systemInstruction: {
-      parts: [
-        { text: sys }
-      ]
-    },
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "OBJECT",
-        properties: {
-          title: { type: "STRING" },
-          time: { type: "STRING" },
-          materials: { type: "STRING" },
-          benefit: { type: "STRING" },
-          safety: { type: "STRING" },
-          steps: { 
-            type: "ARRAY", 
-            items: { type: "STRING" }
-          },
-          collaboration: { type: "STRING" }
-        },
-        required: ["title", "time", "materials", "benefit", "steps", "collaboration"]
-      }
-    }
-  };
-
-  let rawText = "";
-  
-  try {
-    try {
-      const res = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(payload)
-      });
-      rawText = res.candidates?.[0]?.content?.parts?.[0]?.text;
-    } catch (err2_5) {
-      console.warn("Gemini 2.5 Flash failed, attempting automatic fallback to Gemini 1.5 Flash...", err2_5);
-      
-      const resFallback = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(payload)
-      });
-      rawText = resFallback.candidates?.[0]?.content?.parts?.[0]?.text;
-    }
-
-    if (!rawText) throw new Error("Empty response returned from Google's servers.");
-
-    rawText = rawText.replace(/```json/gi, "").replace(/```/gi, "").trim();
-
-    const data = JSON.parse(rawText);
-    currentGeneratedActivity = { ...data, cat: c, ages: s, cost: cost };
-    
-    loadStorageData();
-    const isSaved = savedTitles.includes(data.title);
-    let stepsHtml = ""; 
-    if(Array.isArray(data.steps)){
-       data.steps.forEach(st => stepsHtml += `<li>${st}</li>`);
-    } else {
-       stepsHtml += `<li>Start activity ${data.title}</li>`;
-    }
-
-    root.innerHTML = `
-      <div class="single-card-wrap">
-        <p class="placeholder-text" style="font-size:11px; margin-bottom:8px;">💡 Tap to flip card. Click ❤️ to save it globally!</p>
-        <div class="card-container ${c}">
-          <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
-            <div class="card-face front">
-              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" id="ai-heart" onclick="toggleHeart(event, '${data.title.replace(/'/g, "\\'")}', true)">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-              </button>
-              <div class="card-tags"><span class="tag cat-${c}">${c}</span><span class="tag ages-${s}">${s}</span><span class="tag ${costClass(cost)}">${costLabel(cost)}</span></div>
-              <div class="card-title" style="margin-top:6px;">${data.title}</div>
-              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${data.time}</span></div>
-              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${data.materials}</span></div>
-              <div class="benefit"><strong>Value:</strong> ${data.benefit}</div>
-              ${data.safety ? `<div class="safety-note"><strong>Safety:</strong> ${data.safety}</div>` : ""}
-            </div>
-            <div class="card-face back">
-              <div class="back-title">📋 Instructions</div>
-              <ol class="steps-list">${stepsHtml}</ol>
-              <div class="age-collaboration"><strong>🤝 Collaboration:</strong><br>${data.collaboration}</div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  } catch (e) {
-    console.error("Gemini Error Diagnostic:", e);
-    let userFriendlyError = "Connection block occurred. Check your API Key's active status.";
-    if (e.message && e.message.includes("API key not valid")) {
-      userFriendlyError = "<strong>Error: API Key Invalid</strong>. Please verify you copied the key correctly from Google AI Studio.";
-    } else if (e.message && (e.message.includes("billing") || e.message.includes("Quota exceeded"))) {
-      userFriendlyError = "<strong>Error: Billing/Quota Block</strong>. Ensure you created this key in a fresh project on AI Studio to stay on the Free Tier.";
-    } else if (e.message) {
-      userFriendlyError = `<strong>System Error:</strong> ${e.message.split('{')[0]}`;
-    }
-    
-    err.innerHTML = userFriendlyError;
-    err.style.display = 'block';
-    root.innerHTML = `<p class="placeholder-text">Play concoction failed.</p>`;
-  } finally {
-    btn.disabled = false;
-  }
 }
 
 // --- SAVE CUSTOM CARD FUNCTION ---
