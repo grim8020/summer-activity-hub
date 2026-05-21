@@ -33,6 +33,7 @@ body {
   padding-bottom: calc(90px + env(safe-area-inset-bottom));
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* Prevents double-tap zoom delay on smartphones */
 }
 
 /* App Header */
@@ -114,14 +115,14 @@ body {
   display: none;
   max-width: 1200px;
   margin: 0 auto;
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.25s ease-out;
 }
 .app-view.active {
   display: block;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -213,25 +214,62 @@ body {
 .stat-num { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; margin-bottom: 4px; }
 .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #777; }
 
-/* Card Architecture */
+/* Card Architecture Optimized for Mobile GPU stability (Flat Flip rendering) */
 .grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;
 }
 .card-container {
-  perspective: 1200px; width: 100%; min-height: 3in;
+  width: 100%; min-height: 3in; position: relative;
 }
 .flip-card-inner {
-  position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; min-height: 3in;
+  position: relative; width: 100%; height: 100%; min-height: 3in; cursor: pointer;
 }
-.flip-card-inner.flipped { transform: rotateY(180deg); }
 
+/* 2D flat GPU-friendly transition for bulk lists (prevents perspective crashes on mobile) */
 .card-face {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;
-  backface-visibility: hidden; background: #fff; border-radius: var(--radius); border: 1.5px solid var(--border);
+  background: #fff; border-radius: var(--radius); border: 1.5px solid var(--border);
   padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
-.card-face.front { z-index: 2; transform: rotateY(0deg); }
-.card-face.back { transform: rotateY(180deg); background: #faf9f6; overflow-y: auto; }
+
+.card-face.front { 
+  opacity: 1; z-index: 2; transform: scale(1);
+}
+.card-face.back { 
+  opacity: 0; z-index: 1; transform: scale(0.95); background: #faf9f6; overflow-y: auto; pointer-events: none;
+}
+
+/* Mobile-friendly toggle states */
+.flip-card-inner.flipped .card-face.front {
+  opacity: 0; z-index: 1; transform: scale(0.95); pointer-events: none;
+}
+.flip-card-inner.flipped .card-face.back {
+  opacity: 1; z-index: 2; transform: scale(1); pointer-events: auto;
+}
+
+/* Keep standard 3D flip *strictly* on the Single-Card Randomizer for app feel */
+.single-card-wrap .card-container {
+  perspective: 1200px;
+}
+.single-card-wrap .flip-card-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.single-card-wrap .card-face {
+  backface-visibility: hidden;
+  position: absolute;
+  transition: none; /* Disable bulk transition */
+}
+.single-card-wrap .card-face.front {
+  transform: rotateY(0deg); opacity: 1; z-index: 2; pointer-events: auto;
+}
+.single-card-wrap .card-face.back {
+  transform: rotateY(180deg); opacity: 1; z-index: 1; pointer-events: auto;
+}
+.single-card-wrap .flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
 
 .card-face::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; border-radius: var(--radius) var(--radius) 0 0;
@@ -243,20 +281,20 @@ body {
 
 /* Card UI Elements */
 .action-btn {
-  position: absolute; top: 12px; width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9); border: 1px solid var(--border);
+  position: absolute; top: 12px; width: 34px; height: 34px; border-radius: 50%; /* Larger tap targets */
+  background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.2s;
 }
 .save-btn { right: 12px; }
-.save-btn svg { width: 16px; height: 16px; fill: transparent; stroke: var(--heart); stroke-width: 2.5; transition: all 0.2s; }
-.save-btn:hover { border-color: var(--heart); transform: scale(1.1); }
+.save-btn svg { width: 18px; height: 18px; fill: transparent; stroke: var(--heart); stroke-width: 2.5; transition: all 0.2s; }
+.save-btn:hover { border-color: var(--heart); transform: scale(1.05); }
 .save-btn.active svg { fill: var(--heart); stroke: var(--heart); }
 
-.hide-btn { left: 12px; color: #888; font-size: 13px; }
-.hide-btn:hover { background: #fdf2f2; border-color: #fca5a5; color: #ef4444; transform: scale(1.1); }
+.hide-btn { left: 12px; color: #888; font-size: 15px; }
+.hide-btn:hover { background: #fdf2f2; border-color: #fca5a5; color: #ef4444; transform: scale(1.05); }
 .restore-btn:hover { background: #f0fdf4; border-color: #86efac; color: #22c55e; }
 
-.card-tags { display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%; margin-left: 28px; margin-top: 4px;}
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%; margin-left: 36px; margin-top: 4px;}
 .tag { font-size: 8.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; }
 .tag.cat-outdoor { background: #FEF3E2; color: #9A6A00; }
 .tag.cat-indoor  { background: #EBF4FF; color: #1A5C9A; }
@@ -282,7 +320,7 @@ body {
 .steps-list li { margin-bottom: 4px; }
 .age-collaboration { border-top: 1px solid var(--border); padding-top: 6px; font-size: 10px; line-height: 1.4; color: #444; }
 
-/* Center Displays (AI & Randomizer) */
+/* Center Displays (Randomizer) */
 .center-display {
   display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px;
 }
@@ -299,9 +337,15 @@ body {
 
 .section-label { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; margin: 24px 0 12px; padding-left: 8px; border-left: 4px solid var(--sun); }
 
-/* Loading Animation */
-.spinner { width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1); border-left-color: var(--sky); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+/* Shuffling Animation */
+.shuffling {
+  font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--sky);
+  animation: pulse 0.15s infinite alternate;
+}
+@keyframes pulse {
+  0% { transform: scale(0.98); opacity: 0.7; }
+  100% { transform: scale(1.02); opacity: 1; }
+}
 
 /* Toast */
 .toast-msg { background: #ef4444; color: white; padding: 12px; border-radius: 8px; font-size: 13px; text-align: left; display: none; margin-bottom: 16px; line-height: 1.4; }
@@ -399,8 +443,8 @@ body {
     </div>
   </div>
 
-  <p class="placeholder-text" style="margin-bottom: 16px;">💡 Tap any card to flip it over for instructions. Click ❤️ to save to your plan.</p>
-  <div id="planner-root"></div>
+  <p class="placeholder-text" style="margin-bottom: 16px;">💡 Tap any card to view instructions. Click ❤️ to save to your plan.</p>
+  <div id="planner-root" class="interactive-deck-root"></div>
 </div>
 
 
@@ -442,7 +486,7 @@ body {
     <button class="primary-btn" id="spin-btn" onclick="spinRandomizer()">✨ Spin the Wheel</button>
   </div>
 
-  <div class="center-display" id="randomizer-root">
+  <div class="center-display single-card-wrap" id="randomizer-root">
     <p class="placeholder-text">Adjust filters and hit spin!</p>
   </div>
 </div>
@@ -642,7 +686,7 @@ const baseActivities = [
   {cat:"indoor",title:"Make a family newspaper",ages:"sep",cost:"free",time:"1–2 hrs",materials:"Paper, markers, scissors, glue",benefit:"Writing, design thinking, summarizing — teacher's dream activity"},
   {cat:"indoor",title:"Storybook authoring",ages:"sep",cost:"free",time:"1–2 hrs",materials:"Blank booklet (stapled paper), pencils, crayons",benefit:"7-yr-old writes story; 3-yr-old illustrates — teaches collaboration across ability levels"},
   {cat:"indoor",title:"Music & rhythm session",ages:"both",cost:"free",time:"30–45 min",materials:"Homemade instruments — pots, rubber bands, dried beans in containers",benefit:"Pattern recognition, motor coordination, creative expression"},
-  {cat:"indoor",title:"Recycled material sculpture",ages:"both",cost:"free",time:"60–90 min",materials:"Cardboard boxes, tubes, tape, foil, bottle caps",benefit:"3D thinking, creativity, sustainability awareness"},
+  {cat:"indoor",title:"Recycled material sculpture",ages:"both",cost:"free",time:"60–90 min",materials:"Cardboard boxes, tubes, tape, foil, border caps",benefit:"3D thinking, creativity, sustainability awareness"},
   {cat:"indoor",title:"Letter/number art — hopscotch version",ages:"both",cost:"free",time:"30–45 min",materials:"Paper tiles, markers",benefit:"7-yr-old makes the game; 3-yr-old plays it — peer teaching dynamic"},
   {cat:"indoor",title:"Mindfulness & yoga for kids",ages:"both",cost:"free",time:"20–30 min",materials:"Yoga mat or rug, YouTube kids yoga video",benefit:"Emotional regulation, body awareness, breath control"},
   {cat:"indoor",title:"Coding intro (7-yr-old)",ages:"sep",cost:"free",time:"30–45 min",materials:"Scratch Jr (free app) or Code.org",benefit:"Computational thinking, sequencing, problem decomposition"},
@@ -727,7 +771,7 @@ const baseActivities = [
   {cat:"outing",title:"Children's museum",ages:"both",cost:"splurge",time:"Half day",materials:"Admission fee",benefit:"Hands-on STEM, social exposure, curiosity-driven learning"},
   {cat:"outing",title:"Library summer reading program",ages:"both",cost:"free",time:"Weekly check-ins",materials:"Library card",benefit:"Reading motivation, community belonging, reward-based goal setting"},
   {cat:"outing",title:"Pottery or art class (7-yr-old)",ages:"sep",cost:"splurge",time:"1–2 hrs per class",materials:"Class fee",benefit:"Focused skill development, instructor feedback, peer learning"},
-  {cat:"outing",title:"Pool day or swimming lessons",ages:"both",cost:"low",time:"1–2 hrs",materials:"Swim gear",benefit:"Water safety — critical life skill — endurance, confidence",safety:"3-yr-old requires arm's-length supervision at all times in water"},
+  {cat:"outing",title:"Pool day or swimming lessons",ages:"both",cost:"low",time:"1–2 hrs",materials:"Swim gear",benefit:"Water safety — critical life skill — endurance, confidence",safety:"3-yr-old requires active water supervision"},
   {cat:"outing",title:"Planetarium or science museum",ages:"both",cost:"splurge",time:"Half day",materials:"Admission",benefit:"STEM inspiration, wonder and curiosity, real-world learning"},
   {cat:"outing",title:"Pick-your-own farm",ages:"both",cost:"low",time:"Half day",materials:"Buckets, spending money for produce",benefit:"Food literacy, agricultural awareness, real-world math"},
   {cat:"outing",title:"Local theater or puppet show",ages:"both",cost:"low",time:"1.5–2 hrs",materials:"Ticket cost",benefit:"Arts exposure, narrative comprehension, cultural broadening"},
@@ -775,7 +819,7 @@ const baseActivities = [
   {cat:"outing",title:"Public safety police fleet vehicle compound overlook",ages:"both",cost:"free",time:"30 min",materials:"None",benefit:"Civic emergency protection system structural literacy, utility transport categorization"}
 ];
 
-// STATE MANAGEMENT - Wrapped in secure initializers
+// STATE STORAGE
 let savedTitles = [];
 let hiddenTitles = [];
 
@@ -792,23 +836,18 @@ function loadStorageData() {
   } catch(e) {
     hiddenTitles = [];
   }
-  
-  // Clean arrays to guarantee strings only and remove malformations
   savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
   hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
 }
 
-// Initial storage load
 loadStorageData();
 
 let plannerTab = "all"; // 'all', 'plan', 'hidden'
 
-// LABELS & UTILS
 const sectionLabels = { outdoor: "🌤 Outdoor Activities", indoor: "🏠 Indoor Activities", rainy: "🌧 Rainy Day Activities", outing: "📍 Outings & Field Trips" };
 function costLabel(c) { return c === "free" ? "Free" : c === "splurge" ? "Splurge" : "Low cost"; }
 function costClass(c) { return c === "free" ? "cost-free" : c === "splurge" ? "cost-splurge" : "cost-low"; }
 
-// Secure HTML entity escaping to safeguard data-attributes from quote breaks
 function escapeHtml(str) {
   if (typeof str !== 'string') return '';
   return str.replace(/&/g, '&amp;')
@@ -818,7 +857,6 @@ function escapeHtml(str) {
             .replace(/'/g, '&#039;');
 }
 
-// Merges standard + custom activities safely with strict null/corruption filters
 function getMergedActivities() {
   let customList = [];
   try {
@@ -827,37 +865,43 @@ function getMergedActivities() {
   } catch(e) {
     customList = [];
   }
-  
-  // Discard empty, null, or corrupted objects securely
   customList = customList.filter(item => item && item.title && item.cat);
   return [...baseActivities, ...customList];
 }
 
-// Programmatic Click Handler Proxies - Reads properties straight from dataset nodes to completely isolate runtime strings
+// PROGRAMMATIC EVENT DELEGATION (CRITICAL FOR SMARTPHONE STABILITY)
+// We capture tap and click triggers without inline string attribute configurations
 function handleHeartClick(event, btnElement) {
   if (event) {
-    if (typeof event.stopPropagation === "function") event.stopPropagation();
-    if (typeof event.preventDefault === "function") event.preventDefault();
+    event.stopPropagation();
+    event.preventDefault();
   }
   const container = btnElement.closest('.card-container');
   if (!container) return;
   const title = container.getAttribute('data-title');
   const isCustom = container.getAttribute('data-custom') === 'true';
-  toggleHeart(event, title, isCustom);
+  toggleHeart(title, isCustom);
 }
 
 function handleHideClick(event, btnElement) {
   if (event) {
-    if (typeof event.stopPropagation === "function") event.stopPropagation();
-    if (typeof event.preventDefault === "function") event.preventDefault();
+    event.stopPropagation();
+    event.preventDefault();
   }
   const container = btnElement.closest('.card-container');
   if (!container) return;
   const title = container.getAttribute('data-title');
-  toggleHide(event, title);
+  toggleHide(title);
 }
 
-// Global Nav Switch with try-catch wrap to ensure UI stability
+// Card rotation triggers (2D Mobile Hardware Optimized)
+function handleCardBodyClick(event, cardInnerElement) {
+  // Guard click boundaries so button taps do not cause flip rotations
+  if (event.target.closest('.action-btn')) return;
+  cardInnerElement.classList.toggle('flipped');
+}
+
+// Global Nav Switch with defensive execution loops
 function switchAppView(viewId) {
   try {
     const plannerView = document.getElementById('view-planner');
@@ -882,7 +926,6 @@ function switchAppView(viewId) {
     if (targetView) targetView.classList.add('active');
     if (targetNav) targetNav.classList.add('active');
     
-    // Re-sync storage arrays securely whenever views shift
     loadStorageData();
     
     if (viewId === 'planner') { 
@@ -933,8 +976,8 @@ function generateInstructions(a) {
   return { steps, collaboration };
 }
 
-// GLOBAL DATA MODIFIERS - Wrapped in try-catch to prevent Safari incognito crashes
-function toggleHeart(event, title, isCustom) {
+// GLOBAL DATA MODIFIERS
+function toggleHeart(title, isCustom) {
   loadStorageData();
   let customActivities = [];
   try {
@@ -962,17 +1005,16 @@ function toggleHeart(event, title, isCustom) {
     }
   }
   
-  // Private browsing safe-write block
   try {
     localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
     localStorage.setItem('summer_custom_activities', JSON.stringify(customActivities));
   } catch(e) {
-    console.warn("Storage write failed (Private mode/incognito restriction?):", e);
+    console.warn("Storage write blocked:", e);
   }
   
   updateStats();
   
-  // Real-time visual heart state update inside Randomizer if card matches
+  // Real-time update inside Randomizer display container
   const randCard = document.querySelector('#view-randomizer .card-container');
   if (randCard && randCard.getAttribute('data-title') === title) {
     const heartBtn = randCard.querySelector('.save-btn');
@@ -981,19 +1023,18 @@ function toggleHeart(event, title, isCustom) {
     }
   }
   
-  // Conditionally refresh current view layers
   if (document.getElementById('view-planner').classList.contains('active')) {
     renderPlanner(); 
   }
 }
 
-function toggleHide(event, title) {
+function toggleHide(title) {
   loadStorageData();
   const idx = hiddenTitles.indexOf(title);
   if (idx === -1) {
     hiddenTitles.push(title);
     const sIdx = savedTitles.indexOf(title);
-    if (sIdx !== -1) savedTitles.splice(sIdx, 1); // remove from saved if hidden
+    if (sIdx !== -1) savedTitles.splice(sIdx, 1);
   } else {
     hiddenTitles.splice(idx, 1);
   }
@@ -1039,7 +1080,7 @@ function renderPlanner() {
     updateStats();
     
     const root = document.getElementById('planner-root');
-    if (!root) return; // Prevent lifecycle evaluation crashes on mobile before initial draw
+    if (!root) return;
     
     const searchBarEl = document.getElementById('search-bar');
     const q = searchBarEl ? searchBarEl.value.toLowerCase().trim() : "";
@@ -1084,12 +1125,12 @@ function renderPlanner() {
         const inst = generateInstructions(a);
         const isCustom = (a.steps) ? true : false;
         
-        // Escape title strings into safe entities to support dynamic dataset injection
+        // Convert and escape raw values to prevent quote breakouts
         const escapedTitle = escapeHtml(a.title);
 
         html += `
         <div class="card-container ${a.cat}" data-title="${escapedTitle}" data-custom="${isCustom}">
-          <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner" onclick="handleCardBodyClick(event, this)">
             <div class="card-face front">
               ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="handleHideClick(event, this)" title="Restore">↺</button>` 
                          : `<button class="action-btn hide-btn" onclick="handleHideClick(event, this)" title="Hide">✕</button>`}
@@ -1174,7 +1215,7 @@ function spinRandomizer() {
       <div class="single-card-wrap">
         <p class="placeholder-text" style="font-size:11px; margin-bottom:8px;">💡 Tap to flip card</p>
         <div class="card-container ${pick.cat}" data-title="${escapedTitle}" data-custom="${isCustom}">
-          <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner" onclick="handleCardBodyClick(event, this)">
             <div class="card-face front">
               <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="handleHeartClick(event, this)">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
