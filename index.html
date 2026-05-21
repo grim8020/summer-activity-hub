@@ -748,7 +748,7 @@ const baseActivities = [
   {cat:"outing",title:"Rooftop downtown garage architectural viewing",ages:"both",cost:"free",time:"45 min",materials:"Parked automobile access clearance",benefit:"Urban bird's eye perspective scaling exploration, grid orientation structural checks",safety:"Maintain absolute interior car central placement bounds"},
   {cat:"outing",title:"Public municipal park sculpture lawn hunt",ages:"both",cost:"free",time:"1–2 hrs",materials:"Clues tracking list prints",benefit:"Artistic dimension spatial scale analysis, abstract concept discussion mapping"},
   {cat:"outing",title:"State agricultural university farm pastures",ages:"both",cost:"free",time:"1.5 hrs",materials:"Open access footwear, clean towels",benefit:"Animal biological growth classification, agrarian infrastructure system views"},
-  {cat:"outing",title:"Local marina harbor observation check",ages:"both",cost:"free",time:"1 hr",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail knot function checks",safety:"Ensure 3-yr-old wears active life preserver securely fastened on slips"},
+  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail knot function checks",safety:"Ensure 3-yr-old wears active life preserver securely fastened on slips"},
   {cat:"outing",title:"Fish hatchery conservation stream visit",ages:"both",cost:"free",time:"1.5 hrs",materials:"Quarter coins for pelleted commercial fish food dispensers",benefit:"Aquatic bio-cycle school population tracking, ecological caretaking models"},
   {cat:"outing",title:"Local architectural residential walking inspection",ages:"both",cost:"free",time:"45 min",materials:"Notebook sketching layout pads",benefit:"Structural styling identification metrics, regional layout geometry comparisons"},
   {cat:"outing",title:"Historical cemetery emblem icon charting",ages:"sep",cost:"free",time:"1 hr",materials:"Crayon wax, thick butcher paper rolls",benefit:"7-yr-old: lineage date chronology logic tracking; 3-yr-old: stone structural relief friction rubbings"},
@@ -782,14 +782,20 @@ let hiddenTitles = [];
 function loadStorageData() {
   try {
     savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
+    if (!Array.isArray(savedTitles)) savedTitles = [];
   } catch(e) {
     savedTitles = [];
   }
   try {
     hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
+    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
   } catch(e) {
     hiddenTitles = [];
   }
+  
+  // Clean arrays to guarantee strings only and remove malformations
+  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
+  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
 }
 
 // Initial storage load
@@ -802,7 +808,7 @@ const sectionLabels = { outdoor: "🌤 Outdoor Activities", indoor: "🏠 Indoor
 function costLabel(c) { return c === "free" ? "Free" : c === "splurge" ? "Splurge" : "Low cost"; }
 function costClass(c) { return c === "free" ? "cost-free" : c === "splurge" ? "cost-splurge" : "cost-low"; }
 
-// Merges standard + custom activities safely
+// Merges standard + custom activities safely with strict null/corruption filters
 function getMergedActivities() {
   let customList = [];
   try {
@@ -811,29 +817,36 @@ function getMergedActivities() {
   } catch(e) {
     customList = [];
   }
+  
+  // Discard empty, null, or corrupted objects securely
+  customList = customList.filter(item => item && item.title && item.cat);
   return [...baseActivities, ...customList];
 }
 
-// Global Nav Switch
+// Global Nav Switch with try-catch wrap to ensure UI stability
 function switchAppView(viewId) {
-  document.getElementById('view-planner').classList.remove('active');
-  document.getElementById('view-randomizer').classList.remove('active');
-  document.getElementById('view-custom').classList.remove('active');
-  
-  document.getElementById('nav-planner').classList.remove('active');
-  document.getElementById('nav-randomizer').classList.remove('active');
-  document.getElementById('nav-custom').classList.remove('active');
-  
-  document.getElementById('view-' + viewId).classList.add('active');
-  document.getElementById('nav-' + viewId).classList.add('active');
-  
-  // Re-sync storage arrays whenever views shift
-  loadStorageData();
-  
-  if (viewId === 'planner') { 
-    renderPlanner(); 
-  } else if (viewId === 'randomizer') {
-    syncUIState();
+  try {
+    document.getElementById('view-planner').classList.remove('active');
+    document.getElementById('view-randomizer').classList.remove('active');
+    document.getElementById('view-custom').classList.remove('active');
+    
+    document.getElementById('nav-planner').classList.remove('active');
+    document.getElementById('nav-randomizer').classList.remove('active');
+    document.getElementById('nav-custom').classList.remove('active');
+    
+    document.getElementById('view-' + viewId).classList.add('active');
+    document.getElementById('nav-' + viewId).classList.add('active');
+    
+    // Re-sync storage arrays securely whenever views shift
+    loadStorageData();
+    
+    if (viewId === 'planner') { 
+      renderPlanner(); 
+    } else if (viewId === 'randomizer') {
+      syncUIState();
+    }
+  } catch(e) {
+    console.error("View Switch Failed:", e);
   }
 }
 
@@ -846,8 +859,10 @@ function switchPlannerTab(tabId) {
   renderPlanner();
 }
 
-// Generate Instructions
+// Generate Instructions safely
 function generateInstructions(a) {
+  if (!a) return { steps: "", collaboration: "" };
+  
   if (a.steps && Array.isArray(a.steps)) {
     let customSteps = "";
     a.steps.forEach(s => {
@@ -855,6 +870,7 @@ function generateInstructions(a) {
     });
     return { steps: customSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration || ""}` };
   }
+  
   let steps = `<li><strong>Gather:</strong> Collect ${a.materials || ""}.</li>`;
   if (a.cat === "outing") {
     steps += `<li><strong>Depart:</strong> Pack snacks/sunscreen and pre-check open hours.</li><li><strong>Explore:</strong> Create secure physical boundary limits on-site.</li>`;
@@ -867,10 +883,11 @@ function generateInstructions(a) {
   return { steps, collaboration };
 }
 
-// GLOBAL DATA MODIFIERS - Safely handles events and parameter scopes
+// GLOBAL DATA MODIFIERS - Wrapped in try-catch to prevent Safari incognito crashes
 function toggleHeart(event, title, isCustom) {
   if (event) {
-    event.stopPropagation();
+    if (typeof event.stopPropagation === "function") event.stopPropagation();
+    if (typeof event.preventDefault === "function") event.preventDefault();
   }
   
   loadStorageData();
@@ -886,22 +903,27 @@ function toggleHeart(event, title, isCustom) {
   if (idx === -1) {
     savedTitles.push(title);
     if (isCustom) {
-      const exists = customActivities.some(a => a.title === title);
+      const exists = customActivities.some(a => a && a.title === title);
       if (!exists) {
         const pool = getMergedActivities();
-        const found = pool.find(a => a.title === title);
+        const found = pool.find(a => a && a.title === title);
         if (found) customActivities.push(found);
       }
     }
   } else {
     savedTitles.splice(idx, 1);
     if (isCustom) {
-      customActivities = customActivities.filter(a => a.title !== title);
+      customActivities = customActivities.filter(a => a && a.title !== title);
     }
   }
   
-  localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
-  localStorage.setItem('summer_custom_activities', JSON.stringify(customActivities));
+  // Private browsing safe-write block
+  try {
+    localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
+    localStorage.setItem('summer_custom_activities', JSON.stringify(customActivities));
+  } catch(e) {
+    console.warn("Storage write failed (Private mode/incognito restriction?):", e);
+  }
   
   updateStats();
   
@@ -913,7 +935,8 @@ function toggleHeart(event, title, isCustom) {
 
 function toggleHide(event, title) {
   if (event) {
-    event.stopPropagation();
+    if (typeof event.stopPropagation === "function") event.stopPropagation();
+    if (typeof event.preventDefault === "function") event.preventDefault();
   }
   
   loadStorageData();
@@ -925,15 +948,20 @@ function toggleHide(event, title) {
   } else {
     hiddenTitles.splice(idx, 1);
   }
-  localStorage.setItem('summer_hidden_titles', JSON.stringify(hiddenTitles));
-  localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
+  
+  try {
+    localStorage.setItem('summer_hidden_titles', JSON.stringify(hiddenTitles));
+    localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
+  } catch(e) {
+    console.warn("Storage write failed:", e);
+  }
   
   renderPlanner();
 }
 
 function updateStats() {
   const activeDeckList = getMergedActivities();
-  const savedActivities = activeDeckList.filter(a => savedTitles.includes(a.title));
+  const savedActivities = activeDeckList.filter(a => a && savedTitles.includes(a.title));
   
   document.getElementById('stat-total').innerText = savedActivities.length;
   document.getElementById('stat-outdoor').innerText = savedActivities.filter(a => a.cat === 'outdoor').length;
@@ -948,85 +976,96 @@ function updateStats() {
 
 // --- PLANNER RENDERER ---
 function renderPlanner() {
-  loadStorageData();
-  updateStats();
-  
-  const root = document.getElementById('planner-root');
-  const q = document.getElementById('search-bar').value.toLowerCase().trim();
-  const c = document.getElementById('filter-cat').value;
-  const s = document.getElementById('filter-style').value;
-  const cost = document.getElementById('filter-cost').value;
+  try {
+    loadStorageData();
+    updateStats();
+    
+    const root = document.getElementById('planner-root');
+    const searchBarEl = document.getElementById('search-bar');
+    const q = searchBarEl ? searchBarEl.value.toLowerCase().trim() : "";
+    
+    const catEl = document.getElementById('filter-cat');
+    const c = catEl ? catEl.value : "all";
+    
+    const styleEl = document.getElementById('filter-style');
+    const s = styleEl ? styleEl.value : "all";
+    
+    const costEl = document.getElementById('filter-cost');
+    const cost = costEl ? costEl.value : "all";
 
-  let html = "";
-  let matches = 0;
-  let counter = 0;
-  const pool = getMergedActivities();
-  const catsToRender = (plannerTab === 'plan' || plannerTab === 'hidden') ? ['outdoor', 'indoor', 'rainy', 'outing'] : (c === 'all' ? ['outdoor', 'indoor', 'rainy', 'outing'] : [c]);
+    let html = "";
+    let matches = 0;
+    let counter = 0;
+    const pool = getMergedActivities();
+    const catsToRender = (plannerTab === 'plan' || plannerTab === 'hidden') ? ['outdoor', 'indoor', 'rainy', 'outing'] : (c === 'all' ? ['outdoor', 'indoor', 'rainy', 'outing'] : [c]);
 
-  catsToRender.forEach(catKey => {
-    const list = pool.filter(a => {
-      if (!a || a.cat !== catKey) return false;
-      if (plannerTab === 'hidden') return hiddenTitles.includes(a.title);
-      if (hiddenTitles.includes(a.title)) return false;
-      if (plannerTab === 'plan' && !savedTitles.includes(a.title)) return false;
-      if (plannerTab === 'all') {
-        if (s !== 'all' && a.ages !== s) return false;
-        if (cost !== 'all' && a.cost !== cost) return false;
-      }
-      if (q && !(a.title.toLowerCase().includes(q) || (a.materials && a.materials.toLowerCase().includes(q)) || (a.benefit && a.benefit.toLowerCase().includes(q)))) return false;
-      return true;
+    catsToRender.forEach(catKey => {
+      const list = pool.filter(a => {
+        if (!a || a.cat !== catKey) return false;
+        if (plannerTab === 'hidden') return hiddenTitles.includes(a.title);
+        if (hiddenTitles.includes(a.title)) return false;
+        if (plannerTab === 'plan' && !savedTitles.includes(a.title)) return false;
+        if (plannerTab === 'all') {
+          if (s !== 'all' && a.ages !== s) return false;
+          if (cost !== 'all' && a.cost !== cost) return false;
+        }
+        if (q && !(a.title.toLowerCase().includes(q) || (a.materials && a.materials.toLowerCase().includes(q)) || (a.benefit && a.benefit.toLowerCase().includes(q)))) return false;
+        return true;
+      });
+
+      if (list.length === 0) return;
+      matches += list.length;
+      html += `<div class="section-label">${sectionLabels[catKey]}</div><div class="grid">`;
+
+      list.forEach(a => {
+        counter++;
+        const isSaved = savedTitles.includes(a.title);
+        const isHidden = hiddenTitles.includes(a.title);
+        const inst = generateInstructions(a);
+        const isCustom = (a.steps) ? true : false;
+        
+        // Escape title safely for inline JS parameters
+        const safeTitle = a.title.replace(/'/g, "\\'");
+
+        html += `
+        <div class="card-container ${a.cat}">
+          <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
+            <div class="card-face front">
+              ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="toggleHide(event, '${safeTitle}')" title="Restore">↺</button>` 
+                         : `<button class="action-btn hide-btn" onclick="toggleHide(event, '${safeTitle}')" title="Hide">✕</button>`}
+              
+              ${!isHidden ? `
+                <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${safeTitle}', ${isCustom})">
+                  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </button>` : ''}
+
+              <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both' : 'Age-sep'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
+              <div class="card-title">${a.title}</div>
+              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${a.time || "N/A"}</span></div>
+              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${a.materials || "N/A"}</span></div>
+              <div class="benefit"><strong>Why it matters:</strong> ${a.benefit || ""}</div>
+              ${a.safety ? `<div class="safety-note"><strong>Safety:</strong> ${a.safety}</div>` : ""}
+              <div class="card-num">#${counter}</div>
+            </div>
+            <div class="card-face back">
+              <div class="back-title">📋 Instructions</div>
+              <ol class="steps-list">${inst.steps}</ol>
+              <div class="age-collaboration">${inst.collaboration}</div>
+              <div class="card-num">#${counter}</div>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
     });
 
-    if (list.length === 0) return;
-    matches += list.length;
-    html += `<div class="section-label">${sectionLabels[catKey]}</div><div class="grid">`;
-
-    list.forEach(a => {
-      counter++;
-      const isSaved = savedTitles.includes(a.title);
-      const isHidden = hiddenTitles.includes(a.title);
-      const inst = generateInstructions(a);
-      const isCustom = (a.steps) ? true : false;
-      
-      // Escape title for javascript calls
-      const safeTitle = a.title.replace(/'/g, "\\'");
-
-      html += `
-      <div class="card-container ${a.cat}">
-        <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
-          <div class="card-face front">
-            ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="toggleHide(event, '${safeTitle}')" title="Restore">↺</button>` 
-                       : `<button class="action-btn hide-btn" onclick="toggleHide(event, '${safeTitle}')" title="Hide">✕</button>`}
-            
-            ${!isHidden ? `
-              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${safeTitle}', ${isCustom})">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-              </button>` : ''}
-
-            <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both' : 'Age-sep'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
-            <div class="card-title">${a.title}</div>
-            <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${a.time || "N/A"}</span></div>
-            <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${a.materials || "N/A"}</span></div>
-            <div class="benefit"><strong>Why it matters:</strong> ${a.benefit || ""}</div>
-            ${a.safety ? `<div class="safety-note"><strong>Safety:</strong> ${a.safety}</div>` : ""}
-            <div class="card-num">#${counter}</div>
-          </div>
-          <div class="card-face back">
-            <div class="back-title">📋 Instructions</div>
-            <ol class="steps-list">${inst.steps}</ol>
-            <div class="age-collaboration">${inst.collaboration}</div>
-            <div class="card-num">#${counter}</div>
-          </div>
-        </div>
-      </div>`;
-    });
-    html += `</div>`;
-  });
-
-  if (matches === 0) {
-    html = `<div class="no-results">${plannerTab === 'plan' ? "❤️ Your Plan is Empty<p>Find cards in the explorer and tap the heart!</p>" : (plannerTab === 'hidden' ? "🗑 No Hidden Cards" : "No matches found.")}</div>`;
+    if (matches === 0) {
+      html = `<div class="no-results">${plannerTab === 'plan' ? "❤️ Your Plan is Empty<p>Find cards in the explorer and tap the heart!</p>" : (plannerTab === 'hidden' ? "🗑 No Hidden Cards" : "No matches found.")}</div>`;
+    }
+    root.innerHTML = html;
+  } catch(e) {
+    console.error("Planner Rendering Failed:", e);
   }
-  root.innerHTML = html;
 }
 
 // --- RANDOMIZER RENDERER ---
@@ -1100,89 +1139,103 @@ function spinRandomizer() {
 
 // --- SAVE CUSTOM CARD FUNCTION ---
 function saveCustomCard(event) {
-  event.preventDefault();
-  
-  const successToast = document.getElementById('custom-success');
-  const errorToast = document.getElementById('custom-error');
-  
-  successToast.style.display = 'none';
-  errorToast.style.display = 'none';
-  
-  const title = document.getElementById('cust-title').value.trim();
-  const cat = document.getElementById('cust-cat').value;
-  const ages = document.getElementById('cust-style').value;
-  const cost = document.getElementById('cust-cost').value;
-  const time = document.getElementById('cust-time').value.trim();
-  const materials = document.getElementById('cust-materials').value.trim();
-  const benefit = document.getElementById('cust-benefit').value.trim();
-  const safety = document.getElementById('cust-safety').value.trim();
-  const step1 = document.getElementById('cust-step1').value.trim();
-  const step2 = document.getElementById('cust-step2').value.trim();
-  const step3 = document.getElementById('cust-step3').value.trim();
-  const collaboration = document.getElementById('cust-collaboration').value.trim();
-  
-  // Basic validation checks
-  if (!title || !time || !materials || !benefit || !step1 || !step2 || !step3 || !collaboration) {
-    errorToast.innerText = "Please fill out all required fields!";
-    errorToast.style.display = 'block';
-    return;
-  }
-
-  // Structure the customized card data object safely
-  const customCard = {
-    title,
-    cat,
-    ages,
-    cost,
-    time,
-    materials,
-    benefit,
-    safety: safety || null,
-    steps: [step1, step2, step3],
-    collaboration
-  };
-
-  // Add the newly typed activity into the custom array in localStorage
-  let customList = [];
   try {
-    customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
-    if (!Array.isArray(customList)) customList = [];
-  } catch(e) {
-    customList = [];
-  }
-  
-  // Prevent adding duplicates with exact titles
-  const duplicate = customList.some(a => a && a.title && a.title.toLowerCase() === title.toLowerCase());
-  if (duplicate) {
-    errorToast.innerText = "An activity with this exact title already exists!";
-    errorToast.style.display = 'block';
-    return;
-  }
-
-  customList.push(customCard);
-  localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
-
-  // Automatically Heart/Like the activity so it immediately lands in 'My Plan'
-  loadStorageData();
-  if (!savedTitles.includes(title)) {
-    savedTitles.push(title);
-    localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
-  }
-
-  // Clear Form Fields
-  document.getElementById('custom-activity-form').reset();
-
-  // Success response sequence
-  successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Planner...`;
-  successToast.style.display = 'block';
-
-  // Smooth routing transition back to Deck Planner so they instantly see it inside "My Plan"
-  setTimeout(() => {
+    event.preventDefault();
+    
+    const successToast = document.getElementById('custom-success');
+    const errorToast = document.getElementById('custom-error');
+    
     successToast.style.display = 'none';
-    switchAppView('planner');
-    plannerTab = 'plan'; // Show them "My Plan"
-    switchPlannerTab('plan');
-  }, 2200);
+    errorToast.style.display = 'none';
+    
+    const title = document.getElementById('cust-title').value.trim();
+    const cat = document.getElementById('cust-cat').value;
+    const ages = document.getElementById('cust-style').value;
+    const cost = document.getElementById('cust-cost').value;
+    const time = document.getElementById('cust-time').value.trim();
+    const materials = document.getElementById('cust-materials').value.trim();
+    const benefit = document.getElementById('cust-benefit').value.trim();
+    const safety = document.getElementById('cust-safety').value.trim();
+    const step1 = document.getElementById('cust-step1').value.trim();
+    const step2 = document.getElementById('cust-step2').value.trim();
+    const step3 = document.getElementById('cust-step3').value.trim();
+    const collaboration = document.getElementById('cust-collaboration').value.trim();
+    
+    // Basic validation checks
+    if (!title || !time || !materials || !benefit || !step1 || !step2 || !step3 || !collaboration) {
+      errorToast.innerText = "Please fill out all required fields!";
+      errorToast.style.display = 'block';
+      return;
+    }
+
+    // Structure the customized card data object safely
+    const customCard = {
+      title,
+      cat,
+      ages,
+      cost,
+      time,
+      materials,
+      benefit,
+      safety: safety || null,
+      steps: [step1, step2, step3],
+      collaboration
+    };
+
+    // Add the newly typed activity into the custom array in localStorage safely
+    let customList = [];
+    try {
+      customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
+      if (!Array.isArray(customList)) customList = [];
+    } catch(e) {
+      customList = [];
+    }
+    
+    // Prevent adding duplicates with exact titles
+    const duplicate = customList.some(a => a && a.title && a.title.toLowerCase() === title.toLowerCase());
+    if (duplicate) {
+      errorToast.innerText = "An activity with this exact title already exists!";
+      errorToast.style.display = 'block';
+      return;
+    }
+
+    customList.push(customCard);
+    
+    // Safe-write try-catch wrap
+    try {
+      localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
+    } catch(e) {
+      console.warn("Could not write customList to localStorage (Incognito restriction?):", e);
+    }
+
+    // Automatically Heart/Like the activity so it immediately lands in 'My Plan'
+    loadStorageData();
+    if (!savedTitles.includes(title)) {
+      savedTitles.push(title);
+      try {
+        localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
+      } catch(e) {
+        console.warn("Could not save hearted title status:", e);
+      }
+    }
+
+    // Clear Form Fields
+    document.getElementById('custom-activity-form').reset();
+
+    // Success response sequence
+    successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Planner...`;
+    successToast.style.display = 'block';
+
+    // Smooth routing transition back to Deck Planner so they instantly see it inside "My Plan"
+    setTimeout(() => {
+      successToast.style.display = 'none';
+      switchAppView('planner');
+      plannerTab = 'plan'; // Show them "My Plan"
+      switchPlannerTab('plan');
+    }, 2200);
+  } catch(e) {
+    console.error("Save Custom Card Failed:", e);
+  }
 }
 
 // Initial Boot
