@@ -850,14 +850,16 @@ function switchPlannerTab(tabId) {
 function generateInstructions(a) {
   if (a.steps && Array.isArray(a.steps)) {
     let customSteps = "";
-    a.steps.forEach(s => customSteps += `<li>${s}</li>`);
-    return { steps: customSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration}` };
+    a.steps.forEach(s => {
+      if (s) customSteps += `<li>${s}</li>`;
+    });
+    return { steps: customSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration || ""}` };
   }
-  let steps = `<li><strong>Gather:</strong> Collect ${a.materials}.</li>`;
+  let steps = `<li><strong>Gather:</strong> Collect ${a.materials || ""}.</li>`;
   if (a.cat === "outing") {
     steps += `<li><strong>Depart:</strong> Pack snacks/sunscreen and pre-check open hours.</li><li><strong>Explore:</strong> Create secure physical boundary limits on-site.</li>`;
   } else {
-    steps += `<li><strong>Set Up:</strong> Prep a dedicated, safe floor space or table.</li><li><strong>Play:</strong> Start "${a.title}". Support free exploration.</li><li><strong>Clean Up:</strong> Frame clean-up as a rapid race using a 5-min timer.</li>`;
+    steps += `<li><strong>Set Up:</strong> Prep a dedicated, safe floor space or table.</li><li><strong>Play:</strong> Start "${a.title || ""}". Support free exploration.</li><li><strong>Clean Up:</strong> Frame clean-up as a rapid race using a 5-min timer.</li>`;
   }
   let collaboration = a.ages === "both" ? 
     `<strong>🤝 Partnership Plan:</strong><br>The 7yo directs operations, keeps logs, or mixes ingredients. The 3yo gathers, stirs, matches colors, or provides simple physical assistance.` : 
@@ -963,7 +965,7 @@ function renderPlanner() {
 
   catsToRender.forEach(catKey => {
     const list = pool.filter(a => {
-      if (a.cat !== catKey) return false;
+      if (!a || a.cat !== catKey) return false;
       if (plannerTab === 'hidden') return hiddenTitles.includes(a.title);
       if (hiddenTitles.includes(a.title)) return false;
       if (plannerTab === 'plan' && !savedTitles.includes(a.title)) return false;
@@ -971,7 +973,7 @@ function renderPlanner() {
         if (s !== 'all' && a.ages !== s) return false;
         if (cost !== 'all' && a.cost !== cost) return false;
       }
-      if (q && !(a.title.toLowerCase().includes(q) || a.materials.toLowerCase().includes(q) || a.benefit.toLowerCase().includes(q))) return false;
+      if (q && !(a.title.toLowerCase().includes(q) || (a.materials && a.materials.toLowerCase().includes(q)) || (a.benefit && a.benefit.toLowerCase().includes(q)))) return false;
       return true;
     });
 
@@ -985,24 +987,27 @@ function renderPlanner() {
       const isHidden = hiddenTitles.includes(a.title);
       const inst = generateInstructions(a);
       const isCustom = (a.steps) ? true : false;
+      
+      // Escape title for javascript calls
+      const safeTitle = a.title.replace(/'/g, "\\'");
 
       html += `
       <div class="card-container ${a.cat}">
         <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
           <div class="card-face front">
-            ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="toggleHide(event, '${a.title.replace(/'/g, "\\'")}')" title="Restore">↺</button>` 
-                       : `<button class="action-btn hide-btn" onclick="toggleHide(event, '${a.title.replace(/'/g, "\\'")}')" title="Hide">✕</button>`}
+            ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="toggleHide(event, '${safeTitle}')" title="Restore">↺</button>` 
+                       : `<button class="action-btn hide-btn" onclick="toggleHide(event, '${safeTitle}')" title="Hide">✕</button>`}
             
             ${!isHidden ? `
-              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${a.title.replace(/'/g, "\\'")}', ${isCustom})">
+              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${safeTitle}', ${isCustom})">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
               </button>` : ''}
 
             <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both' : 'Age-sep'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
             <div class="card-title">${a.title}</div>
-            <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${a.time}</span></div>
-            <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${a.materials}</span></div>
-            <div class="benefit"><strong>Why it matters:</strong> ${a.benefit}</div>
+            <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${a.time || "N/A"}</span></div>
+            <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${a.materials || "N/A"}</span></div>
+            <div class="benefit"><strong>Why it matters:</strong> ${a.benefit || ""}</div>
             ${a.safety ? `<div class="safety-note"><strong>Safety:</strong> ${a.safety}</div>` : ""}
             <div class="card-num">#${counter}</div>
           </div>
@@ -1039,6 +1044,7 @@ function spinRandomizer() {
   loadStorageData();
   
   const pool = getMergedActivities().filter(a => {
+    if (!a) return false;
     if (hiddenTitles.includes(a.title)) return false;
     if (poolMode === 'liked' && !savedTitles.includes(a.title)) return false;
     if (c !== 'all' && a.cat !== c) return false;
@@ -1061,6 +1067,7 @@ function spinRandomizer() {
       const inst = generateInstructions(pick);
       const isSaved = savedTitles.includes(pick.title);
       const isCustom = (pick.steps) ? true : false;
+      const safeTitle = pick.title.replace(/'/g, "\\'");
       
       root.innerHTML = `
       <div class="single-card-wrap">
@@ -1068,14 +1075,14 @@ function spinRandomizer() {
         <div class="card-container ${pick.cat}">
           <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
             <div class="card-face front">
-              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${pick.title.replace(/'/g, "\\'")}', ${isCustom})">
+              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${safeTitle}', ${isCustom})">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
               </button>
               <div class="card-tags"><span class="tag cat-${pick.cat}">${pick.cat}</span><span class="tag ages-${pick.ages}">${pick.ages}</span><span class="tag ${costClass(pick.cost)}">${costLabel(pick.cost)}</span></div>
               <div class="card-title" style="margin-top:6px;">${pick.title}</div>
-              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${pick.time}</span></div>
-              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${pick.materials}</span></div>
-              <div class="benefit"><strong>Value:</strong> ${pick.benefit}</div>
+              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${pick.time || "N/A"}</span></div>
+              <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${pick.materials || "N/A"}</span></div>
+              <div class="benefit"><strong>Value:</strong> ${pick.benefit || ""}</div>
               ${pick.safety ? `<div class="safety-note"><strong>Safety:</strong> ${pick.safety}</div>` : ""}
             </div>
             <div class="card-face back">
@@ -1145,7 +1152,7 @@ function saveCustomCard(event) {
   }
   
   // Prevent adding duplicates with exact titles
-  const duplicate = customList.some(a => a.title.toLowerCase() === title.toLowerCase());
+  const duplicate = customList.some(a => a && a.title && a.title.toLowerCase() === title.toLowerCase());
   if (duplicate) {
     errorToast.innerText = "An activity with this exact title already exists!";
     errorToast.style.display = 'block';
