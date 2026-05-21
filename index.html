@@ -42,6 +42,7 @@ body {
   margin: 0 auto 24px auto;
   text-align: center;
   padding-top: 10px;
+  position: relative;
 }
 
 .app-title {
@@ -54,6 +55,25 @@ body {
 .app-subtitle {
   font-size: 13px;
   color: #666;
+}
+
+/* Cloud Status Indicator badge */
+.cloud-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eae3d2;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 20px;
+  margin-top: 8px;
+  color: #555;
+  transition: all 0.3s ease;
+}
+.cloud-status.synced {
+  background: #e1f5fe;
+  color: #0288d1;
 }
 
 /* Bottom Navigation Bar */
@@ -339,7 +359,7 @@ body {
 
 /* Shuffling Animation */
 .shuffling {
-  font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--sky);
+  font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--sky);
   animation: pulse 0.15s infinite alternate;
 }
 @keyframes pulse {
@@ -385,6 +405,10 @@ body {
 <div class="app-header">
   <h1 class="app-title">Summer Activity Hub</h1>
   <p class="app-subtitle">Curate and concoct the perfect summer schedule.</p>
+  <div class="cloud-status" id="db-pills">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-top:-1px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
+    <span id="db-status">Initializing storage...</span>
+  </div>
 </div>
 
 <!-- ==========================================
@@ -607,7 +631,46 @@ body {
   </button>
 </nav>
 
-<script>
+<script type="module">
+// --- FIREBASE IMPORTS (11.6.1 STABLE BROWSER RELEASES) ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+// --- STATE STORAGE ---
+let savedTitles = [];
+let hiddenTitles = [];
+let firestoreCustomActivities = []; // Firebase direct storage synchronization memory slot
+let plannerTab = "all"; // 'all', 'plan', or 'hidden'
+let currentUser = null;
+let db = null;
+let auth = null;
+
+// Resolve app ID & configuration parameters programmatically
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-summer-app';
+const hasFirebaseConfig = typeof __firebase_config !== 'undefined';
+
+// --- DICTIONARIES AND CONSTANTS ---
+const sectionLabels = { 
+  outdoor: "🌤 Outdoor Activities", 
+  indoor: "🏠 Indoor Activities", 
+  rainy: "🌧 Rainy Day Activities", 
+  outing: "📍 Outings & Field Trips" 
+};
+
+function costLabel(c) { return c === "free" ? "Free" : c === "splurge" ? "Splurge" : "Low cost"; }
+function costClass(c) { return c === "free" ? "cost-free" : c === "splurge" ? "cost-splurge" : "cost-low"; }
+
+// Secure HTML entity escaping to safeguard data-attributes from quote breaks
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+}
+
 // --- MASTER DATASET (200 Items) ---
 const baseActivities = [
   // OUTDOOR
@@ -792,7 +855,7 @@ const baseActivities = [
   {cat:"outing",title:"Rooftop downtown garage architectural viewing",ages:"both",cost:"free",time:"45 min",materials:"Parked automobile access clearance",benefit:"Urban bird's eye perspective scaling exploration, grid orientation structural checks",safety:"Maintain absolute interior car central placement bounds"},
   {cat:"outing",title:"Public municipal park sculpture lawn hunt",ages:"both",cost:"free",time:"1–2 hrs",materials:"Clues tracking list prints",benefit:"Artistic dimension spatial scale analysis, abstract concept discussion mapping"},
   {cat:"outing",title:"State agricultural university farm pastures",ages:"both",cost:"free",time:"1.5 hrs",materials:"Open access footwear, clean towels",benefit:"Animal biological growth classification, agrarian infrastructure system views"},
-  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail knot function checks",safety:"Ensure 3-yr-old wears active life preserver securely fastened on slips"},
+  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail@tailwind utilities;"},
   {cat:"outing",title:"Fish hatchery conservation stream visit",ages:"both",cost:"free",time:"1.5 hrs",materials:"Quarter coins for pelleted commercial fish food dispensers",benefit:"Aquatic bio-cycle school population tracking, ecological caretaking models"},
   {cat:"outing",title:"Local architectural residential walking inspection",ages:"both",cost:"free",time:"45 min",materials:"Notebook sketching layout pads",benefit:"Structural styling identification metrics, regional layout geometry comparisons"},
   {cat:"outing",title:"Historical cemetery emblem icon charting",ages:"sep",cost:"free",time:"1 hr",materials:"Crayon wax, thick butcher paper rolls",benefit:"7-yr-old: lineage date chronology logic tracking; 3-yr-old: stone structural relief friction rubbings"},
@@ -819,11 +882,65 @@ const baseActivities = [
   {cat:"outing",title:"Public safety police fleet vehicle compound overlook",ages:"both",cost:"free",time:"30 min",materials:"None",benefit:"Civic emergency protection system structural literacy, utility transport categorization"}
 ];
 
-// STATE STORAGE
-let savedTitles = [];
-let hiddenTitles = [];
-
+// STATE MANAGEMENT FUNCTIONS
 function loadStorageData() {
+  try {
+    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
+    if (!Array.isArray(savedTitles)) savedTitles = [];
+  } catch(e) {
+    savedTitles = [];
+  }
+  try {
+    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
+    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
+  } catch(e) {
+    hiddenTitles = [];
+  }
+  
+  // Clean arrays to guarantee strings only and remove malformations
+  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
+  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
+}
+
+// Initial storage load
+loadStorageData();
+
+// --- STATE MANAGEMENT - FIRESTORE DIRECT CONFIG ---
+// Secure wrapper to load cloud dataset into local state
+async function loadFirestoreData() {
+  if (!currentUser || !db) return;
+  try {
+    // 1. Saved / Liked Titles (Private User Space)
+    const savedQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles'));
+    savedTitles = [];
+    savedQuery.forEach(doc => {
+      savedTitles.push(doc.id);
+    });
+
+    // 2. Hidden Titles
+    const hiddenQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles'));
+    hiddenTitles = [];
+    hiddenQuery.forEach(doc => {
+      hiddenTitles.push(doc.id);
+    });
+
+    // 3. Parent-Added Custom Activities
+    const customQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities'));
+    firestoreCustomActivities = [];
+    customQuery.forEach(doc => {
+      firestoreCustomActivities.push(doc.data());
+    });
+    
+    // Update active badges & UI displays once pulled cleanly
+    updateCloudStatusBadge(true);
+  } catch (e) {
+    console.error("Firestore Loading Failed:", e);
+    updateCloudStatusBadge(false);
+  }
+}
+
+// Fallback Offline Local Storage Engine
+function loadLocalStorageFallback() {
   try {
     savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
     if (!Array.isArray(savedTitles)) savedTitles = [];
@@ -840,24 +957,65 @@ function loadStorageData() {
   hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
 }
 
-loadStorageData();
-
-let plannerTab = "all"; // 'all', 'plan', 'hidden'
-
-const sectionLabels = { outdoor: "🌤 Outdoor Activities", indoor: "🏠 Indoor Activities", rainy: "🌧 Rainy Day Activities", outing: "📍 Outings & Field Trips" };
-function costLabel(c) { return c === "free" ? "Free" : c === "splurge" ? "Splurge" : "Low cost"; }
-function costClass(c) { return c === "free" ? "cost-free" : c === "splurge" ? "cost-splurge" : "cost-low"; }
-
-function escapeHtml(str) {
-  if (typeof str !== 'string') return '';
-  return str.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+function updateCloudStatusBadge(isOnline) {
+  const badge = document.getElementById('db-pills');
+  const statusText = document.getElementById('db-status');
+  if (isOnline) {
+    if (badge) badge.className = "cloud-status synced";
+    if (statusText) statusText.innerText = "Cloud Synced";
+  } else {
+    if (badge) badge.className = "cloud-status";
+    if (statusText) statusText.innerText = "Offline Mode";
+  }
 }
 
+// --- INITIALIZE STORAGE & AUTH ENGINES ---
+if (hasFirebaseConfig) {
+  try {
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+
+    const initAuth = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    };
+
+    initAuth().catch(console.error);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await loadFirestoreData();
+        renderPlanner();
+      } else {
+        loadLocalStorageFallback();
+        updateCloudStatusBadge(false);
+        renderPlanner();
+      }
+    });
+  } catch(e) {
+    console.error("Firebase startup exception, dropping into offline mode:", e);
+    loadLocalStorageFallback();
+    updateCloudStatusBadge(false);
+    renderPlanner();
+  }
+} else {
+  loadLocalStorageFallback();
+  updateCloudStatusBadge(false);
+}
+
+// Merges baseline activities with manually keyed parents creations
 function getMergedActivities() {
+  if (currentUser && db) {
+    return [...baseActivities, ...firestoreCustomActivities];
+  }
+  
+  // LocalStorage Fallback Routine
   let customList = [];
   try {
     customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
@@ -869,8 +1027,7 @@ function getMergedActivities() {
   return [...baseActivities, ...customList];
 }
 
-// PROGRAMMATIC EVENT DELEGATION (CRITICAL FOR SMARTPHONE STABILITY)
-// We capture tap and click triggers without inline string attribute configurations
+// --- PROGRAMMATIC EVENT DELEGATION AGENTS ---
 function handleHeartClick(event, btnElement) {
   if (event) {
     event.stopPropagation();
@@ -883,6 +1040,7 @@ function handleHeartClick(event, btnElement) {
   toggleHeart(title, isCustom);
 }
 
+// Globalized delegation binders
 function handleHideClick(event, btnElement) {
   if (event) {
     event.stopPropagation();
@@ -894,14 +1052,13 @@ function handleHideClick(event, btnElement) {
   toggleHide(title);
 }
 
-// Card rotation triggers (2D Mobile Hardware Optimized)
+// Card body flip logic
 function handleCardBodyClick(event, cardInnerElement) {
-  // Guard click boundaries so button taps do not cause flip rotations
   if (event.target.closest('.action-btn')) return;
   cardInnerElement.classList.toggle('flipped');
 }
 
-// Global Nav Switch with defensive execution loops
+// --- VIEW NAVIGATION ENGINES ---
 function switchAppView(viewId) {
   try {
     const plannerView = document.getElementById('view-planner');
@@ -938,7 +1095,6 @@ function switchAppView(viewId) {
   }
 }
 
-// Planner Sub-Tabs
 function switchPlannerTab(tabId) {
   plannerTab = tabId;
   const tabAll = document.getElementById('tab-all');
@@ -952,7 +1108,7 @@ function switchPlannerTab(tabId) {
   renderPlanner();
 }
 
-// Generate Instructions safely
+// Generate Instructions cleanly
 function generateInstructions(a) {
   if (!a) return { steps: "", collaboration: "" };
   
@@ -976,45 +1132,59 @@ function generateInstructions(a) {
   return { steps, collaboration };
 }
 
-// GLOBAL DATA MODIFIERS
-function toggleHeart(title, isCustom) {
-  loadStorageData();
-  let customActivities = [];
-  try {
-    customActivities = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
-    if (!Array.isArray(customActivities)) customActivities = [];
-  } catch(e) {
-    customActivities = [];
-  }
-  
+// --- SECURE DATA MODIFIERS ---
+async function toggleHeart(title, isCustom) {
   const idx = savedTitles.indexOf(title);
   if (idx === -1) {
     savedTitles.push(title);
-    if (isCustom) {
-      const exists = customActivities.some(a => a && a.title === title);
-      if (!exists) {
-        const pool = getMergedActivities();
-        const found = pool.find(a => a && a.title === title);
-        if (found) customActivities.push(found);
+    
+    // Cloud Storage update (Rule 1 & Rule 3 compliant)
+    if (currentUser && db) {
+      try {
+        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title), { saved: true });
+        if (isCustom) {
+          const customActivity = getMergedActivities().find(a => a.title === title);
+          if (customActivity) {
+            await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities', title), customActivity);
+            if (!firestoreCustomActivities.some(a => a.title === title)) {
+              firestoreCustomActivities.push(customActivity);
+            }
+          }
+        }
+      } catch(e) {
+        console.error("Cloud write failed:", e);
       }
     }
   } else {
     savedTitles.splice(idx, 1);
-    if (isCustom) {
-      customActivities = customActivities.filter(a => a && a.title !== title);
+    
+    // Cloud Delete Operations
+    if (currentUser && db) {
+      try {
+        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title));
+        if (isCustom) {
+          await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities', title));
+          firestoreCustomActivities = firestoreCustomActivities.filter(a => a.title !== title);
+        }
+      } catch(e) {
+        console.error("Cloud delete failed:", e);
+      }
     }
   }
   
+  // Update offline fallback in parallel
   try {
     localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
-    localStorage.setItem('summer_custom_activities', JSON.stringify(customActivities));
+    if (isCustom) {
+      let customList = getMergedActivities().filter(a => a.steps);
+      localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
+    }
   } catch(e) {
     console.warn("Storage write blocked:", e);
   }
   
   updateStats();
   
-  // Real-time update inside Randomizer display container
   const randCard = document.querySelector('#view-randomizer .card-container');
   if (randCard && randCard.getAttribute('data-title') === title) {
     const heartBtn = randCard.querySelector('.save-btn');
@@ -1028,15 +1198,36 @@ function toggleHeart(title, isCustom) {
   }
 }
 
-function toggleHide(title) {
-  loadStorageData();
+async function toggleHide(title) {
   const idx = hiddenTitles.indexOf(title);
   if (idx === -1) {
     hiddenTitles.push(title);
-    const sIdx = savedTitles.indexOf(title);
-    if (sIdx !== -1) savedTitles.splice(sIdx, 1);
+    
+    if (currentUser && db) {
+      try {
+        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles', title), { hidden: true });
+        const savedIndex = savedTitles.indexOf(title);
+        if (savedIndex !== -1) {
+          savedTitles.splice(savedIndex, 1);
+          await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title));
+        }
+      } catch(e) {
+        console.error("Cloud write failed:", e);
+      }
+    } else {
+      const savedIndex = savedTitles.indexOf(title);
+      if (savedIndex !== -1) savedTitles.splice(savedIndex, 1);
+    }
   } else {
     hiddenTitles.splice(idx, 1);
+    
+    if (currentUser && db) {
+      try {
+        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles', title));
+      } catch(e) {
+        console.error("Cloud delete failed:", e);
+      }
+    }
   }
   
   try {
@@ -1124,8 +1315,6 @@ function renderPlanner() {
         const isHidden = hiddenTitles.includes(a.title);
         const inst = generateInstructions(a);
         const isCustom = (a.steps) ? true : false;
-        
-        // Convert and escape raw values to prevent quote breakouts
         const escapedTitle = escapeHtml(a.title);
 
         html += `
@@ -1241,7 +1430,7 @@ function spinRandomizer() {
 }
 
 // --- SAVE CUSTOM CARD FUNCTION ---
-function saveCustomCard(event) {
+async function saveCustomCard(event) {
   try {
     event.preventDefault();
     
@@ -1287,42 +1476,36 @@ function saveCustomCard(event) {
       collaboration
     };
 
-    // Add the newly typed activity into the custom array in localStorage safely
-    let customList = [];
-    try {
-      customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
-      if (!Array.isArray(customList)) customList = [];
-    } catch(e) {
-      customList = [];
-    }
-    
-    // Prevent adding duplicates with exact titles
-    const duplicate = customList.some(a => a && a.title && a.title.toLowerCase() === title.toLowerCase());
-    if (duplicate) {
-      if (errorToast) {
-        errorToast.innerText = "An activity with this exact title already exists!";
-        errorToast.style.display = 'block';
-      }
-      return;
-    }
-
-    customList.push(customCard);
-    
-    // Safe-write try-catch wrap
-    try {
-      localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
-    } catch(e) {
-      console.warn("Could not write customList to localStorage (Incognito restriction?):", e);
-    }
-
-    // Automatically Heart/Like the activity so it immediately lands in 'My Plan'
-    loadStorageData();
-    if (!savedTitles.includes(title)) {
-      savedTitles.push(title);
+    // Firebase Cloud synchronization
+    if (currentUser && db) {
       try {
-        localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
+        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities', title), customCard);
+        if (!firestoreCustomActivities.some(a => a.title === title)) {
+          firestoreCustomActivities.push(customCard);
+        }
+        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title), { saved: true });
+        if (!savedTitles.includes(title)) {
+          savedTitles.push(title);
+        }
       } catch(e) {
-        console.warn("Could not save hearted title status:", e);
+        console.error("Cloud custom save failed:", e);
+      }
+    } else {
+      // LocalStorage Fallback sync
+      let customList = [];
+      try {
+        customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
+        if (!Array.isArray(customList)) customList = [];
+      } catch(e) {
+        customList = [];
+      }
+      customList.push(customCard);
+      localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
+
+      loadStorageData();
+      if (!savedTitles.includes(title)) {
+        savedTitles.push(title);
+        localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
       }
     }
 
@@ -1347,7 +1530,16 @@ function saveCustomCard(event) {
   }
 }
 
-// Initial Boot
+// --- GLOBALIZE MODULE SCOPE AGENTS FOR INLINE COMPATIBILITY ---
+window.switchAppView = switchAppView;
+window.switchPlannerTab = switchPlannerTab;
+window.spinRandomizer = spinRandomizer;
+window.saveCustomCard = saveCustomCard;
+window.handleHeartClick = handleHeartClick;
+window.handleHideClick = handleHideClick;
+window.handleCardBodyClick = handleCardBodyClick;
+
+// Initial execution Boot
 renderPlanner();
 </script>
 
