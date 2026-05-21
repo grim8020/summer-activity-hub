@@ -875,12 +875,7 @@ body {
 </nav>
 
 <script type="module">
-// --- FIREBASE IMPORTS (11.6.1 STABLE BROWSER RELEASES) ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-// --- STATE STORAGE ---
+// --- GLOBAL DECK PLANNER SCOPE VARIABLES ---
 let savedTitles = [];
 let hiddenTitles = [];
 let firestoreCustomActivities = []; // Firebase direct storage synchronization memory slot
@@ -892,6 +887,33 @@ let auth = null;
 // --- ROUTINE PLANNER DATA SLOTS ---
 let routineSchedule = {}; // { "Monday_burn": "Backyard water play", "Tuesday_joint": "Sidewalk chalk city" }
 let activeSelectionBlock = null; // Stores currently opened block reference: e.g. "Monday_burn"
+
+// Dynamic import placeholders to prevent static load crash-blocks on sandboxed mobile iframes
+let initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged;
+let getFirestore, doc, setDoc, deleteDoc, collection, getDocs;
+
+try {
+  // Dynamically import Firebase libraries so that if external resources are blocked/offline, the script does not abort!
+  const firebaseAppModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+  const firebaseAuthModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+  const firebaseFirestoreModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+  initializeApp = firebaseAppModule.initializeApp;
+  getAuth = firebaseAuthModule.getAuth;
+  signInWithCustomToken = firebaseAuthModule.signInWithCustomToken;
+  signInAnonymously = firebaseAuthModule.signInAnonymously;
+  onAuthStateChanged = firebaseAuthModule.onAuthStateChanged;
+
+  getFirestore = firebaseFirestoreModule.getFirestore;
+  doc = firebaseFirestoreModule.doc;
+  setDoc = firebaseFirestoreModule.setDoc;
+  deleteDoc = firebaseFirestoreModule.deleteDoc;
+  collection = firebaseFirestoreModule.collection;
+  getDocs = firebaseFirestoreModule.getDocs;
+
+} catch (importError) {
+  console.warn("Firebase CDN imports blocked or offline. Falling back to local offline storage.", importError);
+}
 
 // =========================================================================
 // HARDCODED SECURE FIREBASE CONFIGURATION (RULE 1 & 3 READY)
@@ -1117,7 +1139,7 @@ const baseActivities = [
   {cat:"outing",title:"Rooftop downtown garage architectural viewing",ages:"both",cost:"free",time:"45 min",materials:"Parked automobile access clearance",benefit:"Urban bird's eye perspective scaling exploration, grid orientation structural checks",safety:"Maintain absolute interior car central placement bounds"},
   {cat:"outing",title:"Public municipal park sculpture lawn hunt",ages:"both",cost:"free",time:"1–2 hrs",materials:"Clues tracking list prints",benefit:"Artistic dimension spatial scale analysis, abstract concept discussion mapping"},
   {cat:"outing",title:"State agricultural university farm pastures",ages:"both",cost:"free",time:"1.5 hrs",materials:"Open access footwear, clean towels",benefit:"Animal biological growth classification, agrarian infrastructure system views"},
-  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail@tailwind utilities;"},
+  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail boat dynamic exploration"},
   {cat:"outing",title:"Fish hatchery conservation stream visit",ages:"both",cost:"free",time:"1.5 hrs",materials:"Quarter coins for pelleted commercial fish food dispensers",benefit:"Aquatic bio-cycle school population tracking, ecological caretaking models"},
   {cat:"outing",title:"Local architectural residential walking inspection",ages:"both",cost:"free",time:"45 min",materials:"Notebook sketching layout pads",benefit:"Structural styling identification metrics, regional layout geometry comparisons"},
   {cat:"outing",title:"Historical cemetery emblem icon charting",ages:"sep",cost:"free",time:"1 hr",materials:"Crayon wax, thick butcher paper rolls",benefit:"7-yr-old: lineage date chronology logic tracking; 3-yr-old: stone structural relief friction rubbings"},
@@ -1144,11 +1166,111 @@ const baseActivities = [
   {cat:"outing",title:"Public safety police fleet vehicle compound overlook",ages:"both",cost:"free",time:"30 min",materials:"None",benefit:"Civic emergency protection system structural literacy, utility transport categorization"}
 ];
 
+// STATE MANAGEMENT FUNCTIONS
+function loadStorageData() {
+  try {
+    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
+    if (!Array.isArray(savedTitles)) savedTitles = [];
+  } catch(e) {
+    savedTitles = [];
+  }
+  try {
+    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
+    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
+  } catch(e) {
+    hiddenTitles = [];
+  }
+  try {
+    routineSchedule = JSON.parse(localStorage.getItem('summer_routine_schedule')) || {};
+    if (typeof routineSchedule !== 'object' || routineSchedule === null) routineSchedule = {};
+  } catch(e) {
+    routineSchedule = {};
+  }
+  
+  // Clean arrays to guarantee strings only and remove malformations
+  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
+  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
+}
+
+// Initial storage load
+loadStorageData();
+
+// --- STATE MANAGEMENT - FIRESTORE DIRECT CONFIG ---
+// Secure wrapper to load cloud dataset into local state
+async function loadFirestoreData() {
+  if (!currentUser || !db) return;
+  try {
+    // 1. Saved / Liked Titles (Private User Space)
+    const savedQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles'));
+    savedTitles = [];
+    savedQuery.forEach(doc => {
+      savedTitles.push(doc.id);
+    });
+
+    // 2. Hidden Titles
+    const hiddenQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles'));
+    hiddenTitles = [];
+    hiddenQuery.forEach(doc => {
+      hiddenTitles.push(doc.id);
+    });
+
+    // 3. Parent-Added Custom Activities
+    const customQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities'));
+    firestoreCustomActivities = [];
+    customQuery.forEach(doc => {
+      firestoreCustomActivities.push(doc.data());
+    });
+    
+    // 4. Routine Schedule Mapping
+    const routineQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule'));
+    routineSchedule = {};
+    routineQuery.forEach(doc => {
+      routineSchedule[doc.id] = doc.data().assignedActivity || "";
+    });
+    
+    // Update active badges & UI displays once pulled cleanly
+    updateCloudStatusBadge(true);
+  } catch (e) {
+    console.error("Firestore Loading Failed:", e);
+    updateCloudStatusBadge(false);
+  }
+}
+
+// Fallback Offline Local Storage Engine
+function loadLocalStorageFallback() {
+  try {
+    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
+    if (!Array.isArray(savedTitles)) savedTitles = [];
+  } catch(e) {
+    savedTitles = [];
+  }
+  try {
+    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
+    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
+  } catch(e) {
+    hiddenTitles = [];
+  }
+  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
+  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
+}
+
+function updateCloudStatusBadge(isOnline) {
+  const badge = document.getElementById('db-pills');
+  const statusText = document.getElementById('db-status');
+  if (isOnline) {
+    if (badge) badge.className = "cloud-status synced";
+    if (statusText) statusText.innerText = "Cloud Synced";
+  } else {
+    if (badge) badge.className = "cloud-status";
+    if (statusText) statusText.innerText = "Offline Mode";
+  }
+}
+
 // --- INITIALIZE STORAGE & AUTH ENGINES ---
 // Support local mock override OR platform native injection variables
 const activeFirebaseConfig = myLocalFirebaseConfig || (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
 
-if (hasFirebaseConfig && activeFirebaseConfig) {
+if (hasFirebaseConfig && activeFirebaseConfig && initializeApp) {
   try {
     const app = initializeApp(activeFirebaseConfig);
     auth = getAuth(app);
@@ -1944,7 +2066,9 @@ window.handleCardBodyClick = handleCardBodyClick;
 window.openAssignmentModal = openAssignmentModal;
 window.closeAssignmentModal = closeAssignmentModal;
 window.assignActivityToBlock = assignActivityToBlock;
-window.loadStorageData = loadStorageData; // Added missing global binding to fix the ReferenceError
+window.loadStorageData = loadStorageData;
+window.renderPlanner = renderPlanner; // Critical to globalize inline rendering callbacks
+window.renderRoutine = renderRoutine;  // Critical to globalize inline rendering callbacks
 
 // Initial execution Boot
 renderPlanner();
