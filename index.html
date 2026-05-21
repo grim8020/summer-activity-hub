@@ -808,6 +808,16 @@ const sectionLabels = { outdoor: "🌤 Outdoor Activities", indoor: "🏠 Indoor
 function costLabel(c) { return c === "free" ? "Free" : c === "splurge" ? "Splurge" : "Low cost"; }
 function costClass(c) { return c === "free" ? "cost-free" : c === "splurge" ? "cost-splurge" : "cost-low"; }
 
+// Secure HTML entity escaping to safeguard data-attributes from quote breaks
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+}
+
 // Merges standard + custom activities safely with strict null/corruption filters
 function getMergedActivities() {
   let customList = [];
@@ -823,19 +833,54 @@ function getMergedActivities() {
   return [...baseActivities, ...customList];
 }
 
+// Programmatic Click Handler Proxies - Reads properties straight from dataset nodes to completely isolate runtime strings
+function handleHeartClick(event, btnElement) {
+  if (event) {
+    if (typeof event.stopPropagation === "function") event.stopPropagation();
+    if (typeof event.preventDefault === "function") event.preventDefault();
+  }
+  const container = btnElement.closest('.card-container');
+  if (!container) return;
+  const title = container.getAttribute('data-title');
+  const isCustom = container.getAttribute('data-custom') === 'true';
+  toggleHeart(event, title, isCustom);
+}
+
+function handleHideClick(event, btnElement) {
+  if (event) {
+    if (typeof event.stopPropagation === "function") event.stopPropagation();
+    if (typeof event.preventDefault === "function") event.preventDefault();
+  }
+  const container = btnElement.closest('.card-container');
+  if (!container) return;
+  const title = container.getAttribute('data-title');
+  toggleHide(event, title);
+}
+
 // Global Nav Switch with try-catch wrap to ensure UI stability
 function switchAppView(viewId) {
   try {
-    document.getElementById('view-planner').classList.remove('active');
-    document.getElementById('view-randomizer').classList.remove('active');
-    document.getElementById('view-custom').classList.remove('active');
+    const plannerView = document.getElementById('view-planner');
+    const randomizerView = document.getElementById('view-randomizer');
+    const customView = document.getElementById('view-custom');
+
+    if (plannerView) plannerView.classList.remove('active');
+    if (randomizerView) randomizerView.classList.remove('active');
+    if (customView) customView.classList.remove('active');
     
-    document.getElementById('nav-planner').classList.remove('active');
-    document.getElementById('nav-randomizer').classList.remove('active');
-    document.getElementById('nav-custom').classList.remove('active');
+    const navPlanner = document.getElementById('nav-planner');
+    const navRandomizer = document.getElementById('nav-randomizer');
+    const navCustom = document.getElementById('nav-custom');
+
+    if (navPlanner) navPlanner.classList.remove('active');
+    if (navRandomizer) navRandomizer.classList.remove('active');
+    if (navCustom) navCustom.classList.remove('active');
     
-    document.getElementById('view-' + viewId).classList.add('active');
-    document.getElementById('nav-' + viewId).classList.add('active');
+    const targetView = document.getElementById('view-' + viewId);
+    const targetNav = document.getElementById('nav-' + viewId);
+
+    if (targetView) targetView.classList.add('active');
+    if (targetNav) targetNav.classList.add('active');
     
     // Re-sync storage arrays securely whenever views shift
     loadStorageData();
@@ -853,9 +898,14 @@ function switchAppView(viewId) {
 // Planner Sub-Tabs
 function switchPlannerTab(tabId) {
   plannerTab = tabId;
-  document.getElementById('tab-all').classList.toggle('active', tabId === 'all');
-  document.getElementById('tab-plan').classList.toggle('active', tabId === 'plan');
-  document.getElementById('tab-hidden').classList.toggle('active', tabId === 'hidden');
+  const tabAll = document.getElementById('tab-all');
+  const tabPlan = document.getElementById('tab-plan');
+  const tabHidden = document.getElementById('tab-hidden');
+
+  if (tabAll) tabAll.classList.toggle('active', tabId === 'all');
+  if (tabPlan) tabPlan.classList.toggle('active', tabId === 'plan');
+  if (tabHidden) tabHidden.classList.toggle('active', tabId === 'hidden');
+  
   renderPlanner();
 }
 
@@ -885,11 +935,6 @@ function generateInstructions(a) {
 
 // GLOBAL DATA MODIFIERS - Wrapped in try-catch to prevent Safari incognito crashes
 function toggleHeart(event, title, isCustom) {
-  if (event) {
-    if (typeof event.stopPropagation === "function") event.stopPropagation();
-    if (typeof event.preventDefault === "function") event.preventDefault();
-  }
-  
   loadStorageData();
   let customActivities = [];
   try {
@@ -927,6 +972,15 @@ function toggleHeart(event, title, isCustom) {
   
   updateStats();
   
+  // Real-time visual heart state update inside Randomizer if card matches
+  const randCard = document.querySelector('#view-randomizer .card-container');
+  if (randCard && randCard.getAttribute('data-title') === title) {
+    const heartBtn = randCard.querySelector('.save-btn');
+    if (heartBtn) {
+      heartBtn.classList.toggle('active', savedTitles.includes(title));
+    }
+  }
+  
   // Conditionally refresh current view layers
   if (document.getElementById('view-planner').classList.contains('active')) {
     renderPlanner(); 
@@ -934,11 +988,6 @@ function toggleHeart(event, title, isCustom) {
 }
 
 function toggleHide(event, title) {
-  if (event) {
-    if (typeof event.stopPropagation === "function") event.stopPropagation();
-    if (typeof event.preventDefault === "function") event.preventDefault();
-  }
-  
   loadStorageData();
   const idx = hiddenTitles.indexOf(title);
   if (idx === -1) {
@@ -963,15 +1012,24 @@ function updateStats() {
   const activeDeckList = getMergedActivities();
   const savedActivities = activeDeckList.filter(a => a && savedTitles.includes(a.title));
   
-  document.getElementById('stat-total').innerText = savedActivities.length;
-  document.getElementById('stat-outdoor').innerText = savedActivities.filter(a => a.cat === 'outdoor').length;
-  document.getElementById('stat-indoor').innerText = savedActivities.filter(a => a.cat === 'indoor').length;
-  document.getElementById('stat-rainy').innerText = savedActivities.filter(a => a.cat === 'rainy').length;
-  document.getElementById('stat-outing').innerText = savedActivities.filter(a => a.cat === 'outing').length;
+  const totalEl = document.getElementById('stat-total');
+  const outdoorEl = document.getElementById('stat-outdoor');
+  const indoorEl = document.getElementById('stat-indoor');
+  const rainyEl = document.getElementById('stat-rainy');
+  const outingEl = document.getElementById('stat-outing');
+  const savedBadgeEl = document.getElementById('badge-saved');
+  const allBadgeEl = document.getElementById('badge-all');
+  const hiddenBadgeEl = document.getElementById('badge-hidden');
 
-  document.getElementById('badge-saved').innerText = savedActivities.length;
-  document.getElementById('badge-all').innerText = activeDeckList.length - hiddenTitles.length;
-  document.getElementById('badge-hidden').innerText = hiddenTitles.length;
+  if (totalEl) totalEl.innerText = savedActivities.length;
+  if (outdoorEl) outdoorEl.innerText = savedActivities.filter(a => a.cat === 'outdoor').length;
+  if (indoorEl) indoorEl.innerText = savedActivities.filter(a => a.cat === 'indoor').length;
+  if (rainyEl) rainyEl.innerText = savedActivities.filter(a => a.cat === 'rainy').length;
+  if (outingEl) outingEl.innerText = savedActivities.filter(a => a.cat === 'outing').length;
+
+  if (savedBadgeEl) savedBadgeEl.innerText = savedActivities.length;
+  if (allBadgeEl) allBadgeEl.innerText = activeDeckList.length - hiddenTitles.length;
+  if (hiddenBadgeEl) hiddenBadgeEl.innerText = hiddenTitles.length;
 }
 
 // --- PLANNER RENDERER ---
@@ -981,6 +1039,8 @@ function renderPlanner() {
     updateStats();
     
     const root = document.getElementById('planner-root');
+    if (!root) return; // Prevent lifecycle evaluation crashes on mobile before initial draw
+    
     const searchBarEl = document.getElementById('search-bar');
     const q = searchBarEl ? searchBarEl.value.toLowerCase().trim() : "";
     
@@ -1024,18 +1084,18 @@ function renderPlanner() {
         const inst = generateInstructions(a);
         const isCustom = (a.steps) ? true : false;
         
-        // Escape title safely for inline JS parameters
-        const safeTitle = a.title.replace(/'/g, "\\'");
+        // Escape title strings into safe entities to support dynamic dataset injection
+        const escapedTitle = escapeHtml(a.title);
 
         html += `
-        <div class="card-container ${a.cat}">
+        <div class="card-container ${a.cat}" data-title="${escapedTitle}" data-custom="${isCustom}">
           <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
             <div class="card-face front">
-              ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="toggleHide(event, '${safeTitle}')" title="Restore">↺</button>` 
-                         : `<button class="action-btn hide-btn" onclick="toggleHide(event, '${safeTitle}')" title="Hide">✕</button>`}
+              ${isHidden ? `<button class="action-btn hide-btn restore-btn" onclick="handleHideClick(event, this)" title="Restore">↺</button>` 
+                         : `<button class="action-btn hide-btn" onclick="handleHideClick(event, this)" title="Hide">✕</button>`}
               
               ${!isHidden ? `
-                <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${safeTitle}', ${isCustom})">
+                <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="handleHeartClick(event, this)">
                   <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 </button>` : ''}
 
@@ -1075,6 +1135,8 @@ function syncUIState() {
 
 function spinRandomizer() {
   const root = document.getElementById('randomizer-root');
+  if (!root) return;
+  
   const btn = document.getElementById('spin-btn');
   const poolMode = document.getElementById('rand-pool').value;
   const c = document.getElementById('rand-cat').value;
@@ -1106,15 +1168,15 @@ function spinRandomizer() {
       const inst = generateInstructions(pick);
       const isSaved = savedTitles.includes(pick.title);
       const isCustom = (pick.steps) ? true : false;
-      const safeTitle = pick.title.replace(/'/g, "\\'");
+      const escapedTitle = escapeHtml(pick.title);
       
       root.innerHTML = `
       <div class="single-card-wrap">
         <p class="placeholder-text" style="font-size:11px; margin-bottom:8px;">💡 Tap to flip card</p>
-        <div class="card-container ${pick.cat}">
+        <div class="card-container ${pick.cat}" data-title="${escapedTitle}" data-custom="${isCustom}">
           <div class="flip-card-inner" onclick="this.classList.toggle('flipped')">
             <div class="card-face front">
-              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="toggleHeart(event, '${safeTitle}', ${isCustom})">
+              <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="handleHeartClick(event, this)">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
               </button>
               <div class="card-tags"><span class="tag cat-${pick.cat}">${pick.cat}</span><span class="tag ages-${pick.ages}">${pick.ages}</span><span class="tag ${costClass(pick.cost)}">${costLabel(pick.cost)}</span></div>
@@ -1145,8 +1207,8 @@ function saveCustomCard(event) {
     const successToast = document.getElementById('custom-success');
     const errorToast = document.getElementById('custom-error');
     
-    successToast.style.display = 'none';
-    errorToast.style.display = 'none';
+    if (successToast) successToast.style.display = 'none';
+    if (errorToast) errorToast.style.display = 'none';
     
     const title = document.getElementById('cust-title').value.trim();
     const cat = document.getElementById('cust-cat').value;
@@ -1163,8 +1225,10 @@ function saveCustomCard(event) {
     
     // Basic validation checks
     if (!title || !time || !materials || !benefit || !step1 || !step2 || !step3 || !collaboration) {
-      errorToast.innerText = "Please fill out all required fields!";
-      errorToast.style.display = 'block';
+      if (errorToast) {
+        errorToast.innerText = "Please fill out all required fields!";
+        errorToast.style.display = 'block';
+      }
       return;
     }
 
@@ -1194,8 +1258,10 @@ function saveCustomCard(event) {
     // Prevent adding duplicates with exact titles
     const duplicate = customList.some(a => a && a.title && a.title.toLowerCase() === title.toLowerCase());
     if (duplicate) {
-      errorToast.innerText = "An activity with this exact title already exists!";
-      errorToast.style.display = 'block';
+      if (errorToast) {
+        errorToast.innerText = "An activity with this exact title already exists!";
+        errorToast.style.display = 'block';
+      }
       return;
     }
 
@@ -1223,15 +1289,17 @@ function saveCustomCard(event) {
     document.getElementById('custom-activity-form').reset();
 
     // Success response sequence
-    successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Planner...`;
-    successToast.style.display = 'block';
+    if (successToast) {
+      successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Planner...`;
+      successToast.style.display = 'block';
+    }
 
     // Smooth routing transition back to Deck Planner so they instantly see it inside "My Plan"
     setTimeout(() => {
-      successToast.style.display = 'none';
-      switchAppView('planner');
+      if (successToast) successToast.style.display = 'none';
       plannerTab = 'plan'; // Show them "My Plan"
       switchPlannerTab('plan');
+      switchAppView('planner');
     }, 2200);
   } catch(e) {
     console.error("Save Custom Card Failed:", e);
