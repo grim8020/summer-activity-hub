@@ -876,10 +876,11 @@ body {
 </nav>
 
 <script type="module">
-// --- FIREBASE IMPORTS (11.6.1 STABLE BROWSER RELEASES) ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// --- FIREBASE IMPORTS (12.13.0 STABLE BROWSER RELEASES) ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // --- STATE STORAGE ---
 let savedTitles = [];
@@ -1129,6 +1130,7 @@ const activeFirebaseConfig = myLocalFirebaseConfig || (typeof __firebase_config 
 if (hasFirebaseConfig && activeFirebaseConfig) {
   try {
     const app = initializeApp(activeFirebaseConfig);
+    const analytics = getAnalytics(app);
     auth = getAuth(app);
     db = getFirestore(app);
 
