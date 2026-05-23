@@ -57,23 +57,19 @@ body {
   color: #666;
 }
 
-/* Cloud Status Indicator badge */
-.cloud-status {
+/* Local Status Indicator badge */
+.local-status {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   background: #eae3d2;
   font-size: 10px;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 4px 12px;
   border-radius: 20px;
   margin-top: 8px;
   color: #555;
   transition: all 0.3s ease;
-}
-.cloud-status.synced {
-  background: #e1f5fe;
-  color: #0288d1;
 }
 
 /* Bottom Navigation Bar */
@@ -527,9 +523,16 @@ body {
 /* Center Displays (Randomizer) */
 .center-display {
   display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px;
+  margin: 0 auto;
+  width: 100%;
 }
 .single-card-wrap {
   width: 100%; max-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .placeholder-text { color: #888; font-style: italic; font-size: 14px; text-align: center; }
 
@@ -545,6 +548,7 @@ body {
 .shuffling {
   font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--sky);
   animation: pulse 0.15s infinite alternate;
+  text-align: center;
 }
 @keyframes pulse {
   0% { transform: scale(0.98); opacity: 0.7; }
@@ -565,6 +569,14 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
+}
+
+#randomizer-root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  width: 100%;
 }
 
 @media (min-width: 900px) {
@@ -609,14 +621,13 @@ body {
 <div class="app-header">
   <h1 class="app-title">Summer Activity Hub</h1>
   <p class="app-subtitle">Curate and concoct the perfect summer schedule.</p>
-  <div class="cloud-status" id="db-pills">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-top:-1px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
-    <span id="db-status">Initializing storage...</span>
+  <div class="local-status">
+    💾 100% Offline Local Storage Mode Active
   </div>
 </div>
 
 <!-- ==========================================
-     VIEW 1: ACTIVITIES 
+     VIEW 1: DECK PLANNER 
      ========================================== -->
 <div id="view-planner" class="app-view active">
   <div class="planner-tabs">
@@ -714,7 +725,7 @@ body {
     <button class="primary-btn" id="spin-btn" onclick="spinRandomizer()">✨ Spin the Wheel</button>
   </div>
 
-  <div class="center-display single-card-wrap" id="randomizer-root">
+  <div class="center-display" id="randomizer-root">
     <p class="placeholder-text">Adjust filters and hit spin!</p>
   </div>
 </div>
@@ -805,11 +816,11 @@ body {
 
 
 <!-- ==========================================
-     VIEW 4: SUMMER PLANNER DASHBOARD
+     VIEW 4: SUMMER ROUTINE DASHBOARD
      ========================================== -->
 <div id="view-routine" class="app-view">
   <div class="panel">
-    <h2 style="font-family: 'Fraunces', serif; font-size: 22px; text-align: center; margin-bottom: 4px;">Summer Planner Framework</h2>
+    <h2 style="font-family: 'Fraunces', serif; font-size: 22px; text-align: center; margin-bottom: 4px;">Summer Routine Framework</h2>
     <p style="text-align: center; font-size: 13px; color: #666; margin-bottom: 20px;">Design your weekly routine. Tap any highlighted flexible block to assign an activity card from your deck.</p>
   </div>
 
@@ -837,15 +848,16 @@ body {
 
 
 <!-- ==========================================
-     BOTTOM APP NAVIGATION
+     BOTTOM APP NAVIGATION (Swapped Icons)
      ========================================== -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchAppView('planner')" id="nav-planner">
+    <!-- Swapped icon from Routine to Planner -->
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="18" height="18" rx="2"></rect>
       <path d="M9 17h6M9 12h6M9 7h6"></path>
     </svg>
-    Activities
+    Planner
   </button>
   <button class="nav-btn" onclick="switchAppView('randomizer')" id="nav-randomizer">
     <svg class="nav-icon" viewBox="0 0 24 24">
@@ -856,13 +868,14 @@ body {
     Randomizer
   </button>
   <button class="nav-btn" onclick="switchAppView('routine')" id="nav-routine">
+    <!-- Swapped icon from Planner to Routine -->
     <svg class="nav-icon" viewBox="0 0 24 24">
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
       <line x1="16" y1="2" x2="16" y2="6"></line>
       <line x1="8" y1="2" x2="8" y2="6"></line>
       <line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
-    Planner
+    Routine
   </button>
   <button class="nav-btn" onclick="switchAppView('custom')" id="nav-custom">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -874,63 +887,100 @@ body {
   </button>
 </nav>
 
+<script>
+  // --- GLOBALIZE SAFE EVENT HANDLERS ON WINDOW ---
+  // This block ensures that inline HTML click triggers (e.g. onclick="handleHeartClick(event, this)") 
+  // will never fail with ReferenceErrors if the user interacts with the UI early.
+  window.switchAppView = function(viewId) {
+    if (window._internalSwitchAppView) {
+      window._internalSwitchAppView(viewId);
+    } else {
+      console.warn("App module compiler is initializing...");
+    }
+  };
+
+  window.switchPlannerTab = function(tabId) {
+    if (window._internalSwitchPlannerTab) {
+      window._internalSwitchPlannerTab(tabId);
+    } else {
+      console.warn("Tab selection is bootstrapping...");
+    }
+  };
+
+  window.handleHeartClick = function(event, element) {
+    if (window._internalHandleHeartClick) {
+      window._internalHandleHeartClick(event, element);
+    } else {
+      console.warn("Saving system is bootstrapping...");
+    }
+  };
+
+  window.handleHideClick = function(event, element) {
+    if (window._internalHandleHideClick) {
+      window._internalHandleHideClick(event, element);
+    } else {
+      console.warn("Hide system is bootstrapping...");
+    }
+  };
+
+  window.handleCardBodyClick = function(event, element) {
+    if (window._internalHandleCardBodyClick) {
+      window._internalHandleCardBodyClick(event, element);
+    } else {
+      console.warn("Card flipping transitions are booting...");
+    }
+  };
+</script>
+
 <script type="module">
-// --- GLOBAL DECK PLANNER SCOPE VARIABLES ---
+// --- LOCAL STATE STORAGE SETUP ---
 let savedTitles = [];
 let hiddenTitles = [];
-let firestoreCustomActivities = []; // Firebase direct storage synchronization memory slot
-let plannerTab = "all"; // 'all', 'plan', or 'hidden'
-let currentUser = null;
-let db = null;
-let auth = null;
+let customActivities = [];
+let routineSchedule = {};
+let activeSelectionBlock = null;
+let plannerTab = "all";
 
-// --- ROUTINE PLANNER DATA SLOTS ---
-let routineSchedule = {}; // { "Monday_burn": "Backyard water play", "Tuesday_joint": "Sidewalk chalk city" }
-let activeSelectionBlock = null; // Stores currently opened block reference: e.g. "Monday_burn"
-
-// Dynamic import placeholders to prevent static load crash-blocks on sandboxed mobile iframes
-let initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged;
-let getFirestore, doc, setDoc, deleteDoc, collection, getDocs;
-
-try {
-  // Dynamically import Firebase libraries so that if external resources are blocked/offline, the script does not abort!
-  const firebaseAppModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
-  const firebaseAuthModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
-  const firebaseFirestoreModule = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-
-  initializeApp = firebaseAppModule.initializeApp;
-  getAuth = firebaseAuthModule.getAuth;
-  signInWithCustomToken = firebaseAuthModule.signInWithCustomToken;
-  signInAnonymously = firebaseAuthModule.signInAnonymously;
-  onAuthStateChanged = firebaseAuthModule.onAuthStateChanged;
-
-  getFirestore = firebaseFirestoreModule.getFirestore;
-  doc = firebaseFirestoreModule.doc;
-  setDoc = firebaseFirestoreModule.setDoc;
-  deleteDoc = firebaseFirestoreModule.deleteDoc;
-  collection = firebaseFirestoreModule.collection;
-  getDocs = firebaseFirestoreModule.getDocs;
-
-} catch (importError) {
-  console.warn("Firebase CDN imports blocked or offline. Falling back to local offline storage.", importError);
+// --- STATE MANAGEMENT FUNCTIONS ---
+function loadStorageData() {
+  try {
+    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
+    if (!Array.isArray(savedTitles)) savedTitles = [];
+  } catch(e) {
+    savedTitles = [];
+  }
+  try {
+    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
+    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
+  } catch(e) {
+    hiddenTitles = [];
+  }
+  try {
+    customActivities = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
+    if (!Array.isArray(customActivities)) customActivities = [];
+  } catch(e) {
+    customActivities = [];
+  }
+  try {
+    routineSchedule = JSON.parse(localStorage.getItem('summer_routine_schedule')) || {};
+    if (typeof routineSchedule !== 'object' || routineSchedule === null) routineSchedule = {};
+  } catch(e) {
+    routineSchedule = {};
+  }
+  
+  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
+  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
 }
 
-// =========================================================================
-// HARDCODED SECURE FIREBASE CONFIGURATION (RULE 1 & 3 READY)
-// =========================================================================
-const myLocalFirebaseConfig = {
-  apiKey: "AIzaSyAWIIlkz9qr-Sw4iMZQp09N7xdkbbl-NdA",
-  authDomain: "summer-activity-hub.firebaseapp.com",
-  projectId: "summer-activity-hub",
-  storageBucket: "summer-activity-hub.firebasestorage.app",
-  messagingSenderId: "221565202225",
-  appId: "1:221565202225:web:c66a86a1318149440aca10",
-  measurementId: "G-XH9804E738"
-};
+function saveLocalData() {
+  localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
+  localStorage.setItem('summer_hidden_titles', JSON.stringify(hiddenTitles));
+  localStorage.setItem('summer_custom_activities', JSON.stringify(customActivities));
+  localStorage.setItem('summer_routine_schedule', JSON.stringify(routineSchedule));
+}
 
-// Resolve app ID & configuration parameters programmatically
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-summer-app';
-const hasFirebaseConfig = myLocalFirebaseConfig !== null || typeof __firebase_config !== 'undefined';
+// Initial storage load
+loadStorageData();
 
 // --- DICTIONARIES AND CONSTANTS ---
 const sectionLabels = { 
@@ -1019,7 +1069,7 @@ const baseActivities = [
   {cat:"indoor",title:"Puppet theater",ages:"both",cost:"free",time:"1–2 hrs",materials:"Socks, paper bags, fabric scraps",benefit:"Storytelling, language development, creative expression"},
   {cat:"indoor",title:"Map drawing & treasure hunt",ages:"both",cost:"free",time:"45–60 min",materials:"Paper, markers, small 'treasure'",benefit:"Spatial reasoning, reading symbols, cooperative play"},
   {cat:"indoor",title:"Board game rotation",ages:"sep",cost:"low",time:"30–45 min",materials:"Age-appropriate board games",benefit:"7-yr-old: strategy; 3-yr-old: counting and color matching"},
-  {cat:"indoor",title:"Finger, sponge & stamp painting",ages:"both",cost:"low",time:"45–60 min",materials:"Washable paint, paper, sponges, stamps",benefit:"Fine motor, color theory, creative risk-taking"},
+  {cat:"indoor",title:"Finger, sponge & stamp painting",ages:"both",cost:"low",time:"45–60 min",materials:"Warmable paint, paper, sponges, stamps",benefit:"Fine motor, color theory, creative risk-taking"},
   {cat:"indoor",title:"Paper airplane & origami",ages:"sep",cost:"free",time:"30–45 min",materials:"Paper",benefit:"7-yr-old: geometry, multi-step directions; 3-yr-old: basic folding"},
   {cat:"indoor",title:"Fort building",ages:"both",cost:"free",time:"1–2 hrs",materials:"Blankets, pillows, chairs, binder clips",benefit:"Engineering concepts, cooperative play, imaginative world-building"},
   {cat:"indoor",title:"Dress-up & theater performance",ages:"both",cost:"free",time:"1–2 hrs",materials:"Old clothes, props",benefit:"Language development, empathy through role play, confidence"},
@@ -1045,9 +1095,9 @@ const baseActivities = [
   {cat:"indoor",title:"DIY cardboard marble run",ages:"both",cost:"free",time:"1–2 hrs",materials:"Toilet paper tubes, painter's tape, wall space, marbles/large wooden balls",benefit:"7-yr-old: structural slope design and adjustments; 3-yr-old: dropping balls and tracking gravity",safety:"Keep small marbles away from 3-yr-old; use large plastic or wooden balls instead"},
   {cat:"indoor",title:"DIY indoor mini-golf course",ages:"both",cost:"free",time:"1 hr",materials:"Plastic cups, cardboard ramps, tape, toy golf clubs or brooms, tennis balls",benefit:"Spatial awareness, target calculation, precision motor skills"},
   {cat:"indoor",title:"Shadow silhouette drawing",ages:"both",cost:"free",time:"30–45 min",materials:"Flashlight, toy dinosaurs/animals, paper, markers",benefit:"Scale observation, steady fine-motor control, tracing exploration"},
-  {cat:"indoor",title:"Sensory texture walk",ages:"both",cost:"free",time:"30 min",materials:"Trays with bubble wrap, cotton balls, sand, smooth rocks, sponges",benefit:"Tactile sensory processing, neurological development, descriptive vocabulary"},
+  {cat:"indoor",title:"Sensory texture walk",ages:"both",cost:"free",time:"30 min",materials:"Trays with depth indicators (bubble wrap, cotton balls, sand, smooth rocks, sponges)",benefit:"Tactile sensory processing, neurological development, descriptive vocabulary"},
   {cat:"indoor",title:"DIY hallway laser maze",ages:"both",cost:"free",time:"30–45 min",materials:"Yarn or crepe paper, painter's tape, hallway",benefit:"Spatial awareness, motor control planning, flexibility mechanics"},
-  {cat:"indoor",title:"Shaving cream color mixing",ages:"both",cost:"free",time:"30–45 min",materials:"Baking sheet, white shaving cream, liquid food coloring, toothpicks",benefit:"Tactile sensory processing, neurological development, descriptive vocabulary",safety:"Ensure 3-yr-old does not rub eyes while handling shaving cream"},
+  {cat:"indoor",title:"Shaving cream color mixing",ages:"both",cost:"free",time:"30–45 min",materials:"Baking sheet, white shaving cream, liquid food coloring, toothpicks",benefit:"Tactile desensitization, fluid color mechanics, artistic exploration",safety:"Ensure 3-yr-old does not rub eyes while handling shaving cream"},
   {cat:"indoor",title:"Cardboard picture puzzle making",ages:"sep",cost:"free",time:"45–60 min",materials:"Cereal boxes, markers, safety scissors",benefit:"7-yr-old: irregular layout geometry cutting; 3-yr-old: assembly matching pattern"},
   {cat:"indoor",title:"Mirror reflection self-portraits",ages:"both",cost:"free",time:"30–45 min",materials:"Handheld mirrors, paper, crayons or colored pencils",benefit:"Self-identity facial awareness, relative anatomical feature mapping"},
   {cat:"indoor",title:"Salt dough keepsake fossils",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flour, salt, water, small plastic toy dinosaurs/shells",benefit:"Imprint geometry exploration, tactile chemical manipulation, manual compression"},
@@ -1061,7 +1111,7 @@ const baseActivities = [
   {cat:"indoor",title:"Foil boat float test buoyancy",ages:"both",cost:"free",time:"45 min",materials:"Aluminum foil sheets, sink or plastic bin of water, pennies",benefit:"Hydrodynamic structural design study, volume mass distribution comparison"},
   {cat:"indoor",title:"Flashlight reading fort lounge",ages:"both",cost:"free",time:"1 hr",materials:"Dark room, blankets, flashlights, favorite picture books",benefit:"Cozy reading lifestyle tracking, atmospheric text exploration engagement"},
 
-  // RAINY DAY
+  // ==================== RAINY DAY (50 Activities) ====================
   {cat:"rainy",title:"Rainy day movie + discussion",ages:"both",cost:"free",time:"2–3 hrs",materials:"Streaming service",benefit:"7-yr-old practices comprehension and critical thinking; 3-yr-old builds narrative vocabulary"},
   {cat:"rainy",title:"Rainy day bake-off challenge",ages:"both",cost:"low",time:"1.5–2 hrs",materials:"Pantry staples",benefit:"Creativity under constraints, practical math, delayed gratification",safety:"3-yr-old on no-heat stations only"},
   {cat:"rainy",title:"Indoor scavenger hunt",ages:"both",cost:"free",time:"45–60 min",materials:"Written or picture clues",benefit:"7-yr-old: reading clues; 3-yr-old: picture recognition and following directions"},
@@ -1099,19 +1149,19 @@ const baseActivities = [
   {cat:"rainy",title:"Paper plate ring toss crafting",ages:"both",cost:"free",time:"45 min",materials:"Paper plates with center circles cut out, empty paper towel tube base",benefit:"Toss trajectory optimization metrics, manual plate slicing geometry"},
   {cat:"rainy",title:"Indoor shadow wall tracing profiles",ages:"both",cost:"free",time:"30–45 min",materials:"Bright lamp, dark wall surface, large poster board sheets, markers",benefit:"Anatomical proportion silhouette mapping, static shadow capture observation"},
   {cat:"rainy",title:"Bath tub glowing color rave",ages:"both",cost:"low",time:"45 min",materials:"Bathtub filled with warm water, waterproof glow sticks, overhead lights turned off",benefit:"Atmospheric sensory calibration transition, floating refraction tracking exploration",safety:"Never leave children unattended in bath tub environment under any circumstances"},
-  {cat:"rainy",title:"Post-it note target swat board",ages:"both",cost:"free",time:"30 min",materials:"Colorful Post-it notes with numbers/letters affixed to walls, fly swatters",benefit:"Visual scanning speed activation, targeted tool percussive extension control"},
+  {cat:"rainy",title:"Post-it note target swat board",ages:"both",cost:"free",time:"30 min",materials:"Colorful Post-it notes with numbers/letters affixed to walls, fly swatters",benefit:"Visual scanning speed activation, targeted tool percussion extension control"},
   {cat:"rainy",title:"Paper bag animal puppet creation",ages:"both",cost:"free",time:"1 hr",materials:"Lunch size brown paper bags, yarn scraps, markers, glue sticks",benefit:"Character narrative formulation framework, fine motor layering logic"},
   {cat:"rainy",title:"Yarn web room navigation puzzle",ages:"both",cost:"free",time:"45–60 min",materials:"Roll of craft yarn wound around table legs and chairs horizontally",benefit:"Geometric spatial clearance tracking, under-over whole-body coordination movement"},
   {cat:"rainy",title:"Button sorting muffin tin matrix",ages:"both",cost:"free",time:"30–45 min",materials:"Muffin baking pan, large assorted mixed buttons collection",benefit:"Visual criteria grouping taxonomy sorting, targeted drop fine motor focus"},
   {cat:"rainy",title:"DIY playdough printing stamp studios",ages:"both",cost:"free",time:"45 min",materials:"Homemade dough sheets, assorted textural plastic household stamps",benefit:"Inversion stamp texture relief inspection, depth imprint mechanics exploration"},
   {cat:"rainy",title:"Cookie sheet magnet puzzle structures",ages:"both",cost:"free",time:"30–45 min",materials:"Metal cookie baking sheets, colorful plastic refrigerator magnetic letter fonts",benefit:"Friction vector shift tracking, alphabetical shape categorization exercises"},
   {cat:"rainy",title:"Indoor sensory dry pasta bins",ages:"both",cost:"low",time:"1 hr",materials:"Large tub, dried macaroni pasta, measuring cups, plastic funnel kits",benefit:"Auditory rattle pour feedback loops, dry fluid volume movement estimations"},
-  {cat:"rainy",title:"Cardboard ramp car speed trials",ages:"both",cost:"free",time:"45–60 min",materials:"Long cardboard panels, blocks for elevation adjustment, diecast cars",benefit:"Gravity acceleration slope metric testing, structural tracking configuration alignment"},
+  {cat:"rainy",title:"Cardboard ramp car speed trials",ages:"both",cost:"free",time:"45–60 min",materials:"Long cardboard panels, blocks for elevation adjustment, diecast cars",benefit:"Gravity architecture slope metric testing, structural tracking configuration alignment"},
   {cat:"rainy",title:"Tablecloth interior den fortress layout",ages:"both",cost:"free",time:"1–2 hrs",materials:"Large dining table, floor sweeping sheets/tablecloths, floor cushions",benefit:"Enclosed private space psychological soothing sanctuary, cozy storytelling localization"},
   {cat:"rainy",title:"Dry erase window sketching glass art",ages:"both",cost:"low",time:"45 min",materials:"Dry erase markers, home window panes or patio slider doors",benefit:"Transparent background scale drawing layout novelty, effortless arm wipe sweeping"},
   {cat:"rainy",title:"Flashlight beam wall target tag",ages:"both",cost:"free",time:"30 min",materials:"Two flashlights tracking across dimmed ceiling panels",benefit:"Visual focus rapid tracking agility, non-impact targeting synchronization kinetics"},
   {cat:"rainy",title:"Sponge water transfers fine motor tracking",ages:"both",cost:"free",time:"30 min",materials:"Two kitchen bowls, one filled with water, large porous vehicle sponge",benefit:"Hand compression muscle contraction building, liquid balance load shifting tracker"},
-  {cat:"rainy",title:"Toy animal matching foot step footprints prints",ages:"both",cost:"free",time:"45 min",materials:"Plastic toy animals, small rolled flat ink pads or washable paint sheets, paper",benefit:"Anatomical structural imprint signature checks, pattern tracking correspondence logic"},
+  {cat:"rainy",title:"Toy animal matching foot step footprints prints",ages:"both",cost:"free",time:"45 min",materials:"Plastic toy animals, small rolled flat ink footprints, paper",benefit:"Anatomical structural imprint signature checks, pattern tracking correspondence logic"},
 
   // OUTINGS
   {cat:"outing",title:"Local nature center or state park",ages:"both",cost:"low",time:"Half day",materials:"Snacks, water, sunscreen",benefit:"Environmental education, physical activity, expanded world view"},
@@ -1136,10 +1186,10 @@ const baseActivities = [
   {cat:"outing",title:"Public transportation urban rail expedition",ages:"both",cost:"low",time:"1–2 hrs",materials:"Transit ticket passes",benefit:"Public utility operational logistics literacy, social environment acclimation"},
   {cat:"outing",title:"State history historical homestead display houses",ages:"both",cost:"low",time:"2 hrs",materials:"Entry admission passes",benefit:"Temporal heritage transformation context tracing, lifestyle comparison awareness"},
   {cat:"outing",title:"Hardware workshop public building clinics",ages:"sep",cost:"free",time:"1 hr",materials:"Pre-registered corporate craft wood build kit boxes",benefit:"7-yr-old: tool handling precision mechanics; 3-yr-old: tactile alignment tracking"},
-  {cat:"outing",title:"Rooftop downtown garage architectural viewing",ages:"both",cost:"free",time:"45 min",materials:"Parked automobile access clearance",benefit:"Urban bird's eye perspective scaling exploration, grid orientation structural checks",safety:"Maintain absolute interior car central placement bounds"},
+  {cat:"outing",title:"Rooftop downtown garage architectural viewing",ages:"both",cost:"free",time:"45 min",materials:"Parked automobile access clearance",benefit:"Urban bird's eye perspective scaling exploration, grid orientation structural checks",safety:"Maintain absolute interior car central placement distance bounds"},
   {cat:"outing",title:"Public municipal park sculpture lawn hunt",ages:"both",cost:"free",time:"1–2 hrs",materials:"Clues tracking list prints",benefit:"Artistic dimension spatial scale analysis, abstract concept discussion mapping"},
   {cat:"outing",title:"State agricultural university farm pastures",ages:"both",cost:"free",time:"1.5 hrs",materials:"Open access footwear, clean towels",benefit:"Animal biological growth classification, agrarian infrastructure system views"},
-  {cat:"outing",title:"Local marina boat harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail boat dynamic exploration"},
+  {cat:"outing",title:"Local marina harbor observation check",ages:"both",cost:"free",time:"1.5 hrs",materials:"Flotation safety vests if walking docks directly",benefit:"Buoyancy displacement mechanical tracking, sail boat dynamic exploration"},
   {cat:"outing",title:"Fish hatchery conservation stream visit",ages:"both",cost:"free",time:"1.5 hrs",materials:"Quarter coins for pelleted commercial fish food dispensers",benefit:"Aquatic bio-cycle school population tracking, ecological caretaking models"},
   {cat:"outing",title:"Local architectural residential walking inspection",ages:"both",cost:"free",time:"45 min",materials:"Notebook sketching layout pads",benefit:"Structural styling identification metrics, regional layout geometry comparisons"},
   {cat:"outing",title:"Historical cemetery emblem icon charting",ages:"sep",cost:"free",time:"1 hr",materials:"Crayon wax, thick butcher paper rolls",benefit:"7-yr-old: lineage date chronology logic tracking; 3-yr-old: stone structural relief friction rubbings"},
@@ -1152,7 +1202,7 @@ const baseActivities = [
   {cat:"outing",title:"Municipal water treatment facility overlook structures",ages:"both",cost:"free",time:"45 min",materials:"Binoculars",benefit:"Public infrastructure flow engineering tracing, sanitary community utility understanding"},
   {cat:"outing",title:"Regional commercial bakery processing visibility glass",ages:"both",cost:"free",time:"30–45 min",materials:"Snack spending money",benefit:"Industrial manufacturing automation loop visualization, division of labor optimization models"},
   {cat:"outing",title:"Local custom auto dealership vehicle yard tour",ages:"both",cost:"free",time:"45 min",materials:"None",benefit:"Mechanical functional form design exploration, machinery scaling and categorization logic"},
-  {cat:"outing",title:"Municipal outdoor stadium amphitheater sound testing",ages:"both",cost:"free",time:"45 min",materials:"Eco amplification vocal toys",benefit:"Acoustic sound dispersion perimeter projection analysis, open air wave physics"},
+  {cat:"outing",title:"Municipal stadium open-air amphitheater layout",ages:"both",cost:"free",time:"45 min",materials:"Acoustic toys",benefit:"Sound wave propagation observation, heavy concrete structure appreciation"},
   {cat:"outing",title:"Local used specialty bookstore browsing rows",ages:"both",cost:"free",time:"1.5 hrs",materials:"Small book exchange tokens",benefit:"Literary title search sequence indexing sorting, curated text artifact value mapping"},
   {cat:"outing",title:"Suburban pet rescue shelter cat display rooms",ages:"both",cost:"free",time:"45 min",materials:"Sanitizer wipes",benefit:"Domestic animal behaviors socialization tracking, delicate empathy touch training"},
   {cat:"outing",title:"Local farmers roadside truck produce markets",ages:"both",cost:"low",time:"45 min",materials:"Cash coins wallet pocket",benefit:"Microeconomic direct merchant trade tracking, agrarian cultivation mapping analysis"},
@@ -1163,216 +1213,39 @@ const baseActivities = [
   {cat:"outing",title:"Public multi-tier city library kids level play zones",ages:"both",cost:"free",time:"1.5 hrs",materials:"Library card registration",benefit:"Curated spatial literacy interaction, peer play sharing etiquette synchronization"},
   {cat:"outing",title:"Suburban dedicated mini kid playground cluster parks",ages:"both",cost:"free",time:"1–2 hrs",materials:"Outdoor hydration packs, protection screens",benefit:"Varied obstacle system agility mastery tracking, gross motor layout processing"},
   {cat:"outing",title:"Local commercial craft fair outdoor open markets",ages:"both",cost:"free",time:"1.5 hrs",materials:"Comfortable walking shoes",benefit:"Artisan materials fabrication identity exposure, sensory cultural display variation processing"},
-  {cat:"outing",title:"Public safety police fleet vehicle compound overlook",ages:"both",cost:"free",time:"30 min",materials:"None",benefit:"Civic emergency protection system structural literacy, utility transport categorization"}
+  {cat:"outing",title:"Public safety police fleet vehicle compound overlook",ages:"both",cost:"free",title:"30 min",materials:"None",benefit:"Civic emergency protection system structural literacy, utility transport categorization"}
 ];
 
-// STATE MANAGEMENT FUNCTIONS
-function loadStorageData() {
-  try {
-    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
-    if (!Array.isArray(savedTitles)) savedTitles = [];
-  } catch(e) {
-    savedTitles = [];
-  }
-  try {
-    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
-    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
-  } catch(e) {
-    hiddenTitles = [];
-  }
-  try {
-    routineSchedule = JSON.parse(localStorage.getItem('summer_routine_schedule')) || {};
-    if (typeof routineSchedule !== 'object' || routineSchedule === null) routineSchedule = {};
-  } catch(e) {
-    routineSchedule = {};
-  }
-  
-  // Clean arrays to guarantee strings only and remove malformations
-  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
-  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
-}
-
-// Initial storage load
-loadStorageData();
-
-// --- STATE MANAGEMENT - FIRESTORE DIRECT CONFIG ---
-// Secure wrapper to load cloud dataset into local state
-async function loadFirestoreData() {
-  if (!currentUser || !db) return;
-  try {
-    // 1. Saved / Liked Titles (Private User Space)
-    const savedQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles'));
-    savedTitles = [];
-    savedQuery.forEach(doc => {
-      savedTitles.push(doc.id);
-    });
-
-    // 2. Hidden Titles
-    const hiddenQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles'));
-    hiddenTitles = [];
-    hiddenQuery.forEach(doc => {
-      hiddenTitles.push(doc.id);
-    });
-
-    // 3. Parent-Added Custom Activities
-    const customQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities'));
-    firestoreCustomActivities = [];
-    customQuery.forEach(doc => {
-      firestoreCustomActivities.push(doc.data());
-    });
-    
-    // 4. Routine Schedule Mapping
-    const routineQuery = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule'));
-    routineSchedule = {};
-    routineQuery.forEach(doc => {
-      routineSchedule[doc.id] = doc.data().assignedActivity || "";
-    });
-    
-    // Update active badges & UI displays once pulled cleanly
-    updateCloudStatusBadge(true);
-  } catch (e) {
-    console.error("Firestore Loading Failed:", e);
-    updateCloudStatusBadge(false);
-  }
-}
-
-// Fallback Offline Local Storage Engine
-function loadLocalStorageFallback() {
-  try {
-    savedTitles = JSON.parse(localStorage.getItem('summer_saved_titles')) || [];
-    if (!Array.isArray(savedTitles)) savedTitles = [];
-  } catch(e) {
-    savedTitles = [];
-  }
-  try {
-    hiddenTitles = JSON.parse(localStorage.getItem('summer_hidden_titles')) || [];
-    if (!Array.isArray(hiddenTitles)) hiddenTitles = [];
-  } catch(e) {
-    hiddenTitles = [];
-  }
-  savedTitles = savedTitles.filter(t => typeof t === 'string' && t);
-  hiddenTitles = hiddenTitles.filter(t => typeof t === 'string' && t);
-}
-
-function updateCloudStatusBadge(isOnline) {
-  const badge = document.getElementById('db-pills');
-  const statusText = document.getElementById('db-status');
-  if (isOnline) {
-    if (badge) badge.className = "cloud-status synced";
-    if (statusText) statusText.innerText = "Cloud Synced";
-  } else {
-    if (badge) badge.className = "cloud-status";
-    if (statusText) statusText.innerText = "Offline Mode";
-  }
-}
-
-// --- INITIALIZE STORAGE & AUTH ENGINES ---
-// Support local mock override OR platform native injection variables
-const activeFirebaseConfig = myLocalFirebaseConfig || (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
-
-if (hasFirebaseConfig && activeFirebaseConfig && initializeApp) {
-  try {
-    const app = initializeApp(activeFirebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-
-    const initAuth = async () => {
-      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        await signInWithCustomToken(auth, __initial_auth_token);
-      } else {
-        await signInAnonymously(auth);
-      }
-    };
-
-    initAuth().catch((err) => {
-      console.warn("Custom token auth sequence bypassed or anonymous config missing. Falling back to local storage.", err);
-      // Clean recovery - load offline memory structures and drop status badge gracefully
-      loadLocalStorageFallback();
-      updateCloudStatusBadge(false);
-      renderPlanner();
-      renderRoutine();
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        await loadFirestoreData();
-        renderPlanner();
-        renderRoutine();
-      } else {
-        loadLocalStorageFallback();
-        updateCloudStatusBadge(false);
-        renderPlanner();
-        renderRoutine();
-      }
-    });
-  } catch(e) {
-    console.error("Firebase startup exception, dropping into offline mode:", e);
-    loadLocalStorageFallback();
-    updateCloudStatusBadge(false);
-    renderPlanner();
-    renderRoutine();
-  }
-} else {
-  loadLocalStorageFallback();
-  updateCloudStatusBadge(false);
-  // Ensure the page draws even if Firebase configuration is completely blank
-  setTimeout(() => {
-    renderPlanner();
-    renderRoutine();
-  }, 100);
-}
-
-// Merges baseline activities with manually keyed parents creations
 function getMergedActivities() {
-  if (currentUser && db) {
-    return [...baseActivities, ...firestoreCustomActivities];
-  }
-  
-  // LocalStorage Fallback Routine
-  let customList = [];
-  try {
-    customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
-    if (!Array.isArray(customList)) customList = [];
-  } catch(e) {
-    customList = [];
-  }
-  customList = customList.filter(item => item && item.title && item.cat);
+  const customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
   return [...baseActivities, ...customList];
 }
 
-// --- PROGRAMMATIC EVENT DELEGATION AGENTS ---
-function handleHeartClick(event, btnElement) {
-  if (event) {
-    event.stopPropagation();
-    event.preventDefault();
+// Generate Instructions cleanly
+function generateInstructionsInternal(a) {
+  if (!a) return { steps: "", collaboration: "" };
+  
+  if (a.steps && Array.isArray(a.steps)) {
+    let customSteps = "";
+    a.steps.forEach(s => {
+      if (s) customSteps += `<li>${s}</li>`;
+    });
+    return { steps: customSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration || ""}` };
   }
-  const container = btnElement.closest('.card-container');
-  if (!container) return;
-  const title = container.getAttribute('data-title');
-  const isCustom = container.getAttribute('data-custom') === 'true';
-  toggleHeart(title, isCustom);
-}
-
-// Globalized delegation binders
-function handleHideClick(event, btnElement) {
-  if (event) {
-    event.stopPropagation();
-    event.preventDefault();
+  
+  let steps = `<li><strong>Gather:</strong> Collect ${a.materials}.</li>`;
+  if (a.cat === "outing") {
+    steps += `<li><strong>Depart:</strong> Pack snacks/sunscreen and pre-check open hours.</li><li><strong>Explore:</strong> Create secure physical boundary limits on-site.</li>`;
+  } else {
+    steps += `<li><strong>Set Up:</strong> Prep a dedicated, safe floor space or table.</li><li><strong>Play:</strong> Start "${a.title}". Support free exploration.</li><li><strong>Clean Up:</strong> Frame clean-up as a rapid race using a 5-min timer.</li>`;
   }
-  const container = btnElement.closest('.card-container');
-  if (!container) return;
-  const title = container.getAttribute('data-title');
-  toggleHide(title);
+  let collaboration = a.ages === "both" ? 
+    `<strong>🤝 Partnership Plan:</strong><br>The 7yo directs operations, keeps logs, or mixes ingredients. The 3yo gathers, stirs, matches colors, or provides simple physical assistance.` : 
+    `<strong>⚡ Parallel Activities:</strong><br>• <strong>Age 7:</strong> Focus on fine structural building, reading clues, or writing down results.<br>• <strong>Age 3:</strong> Focus on physical sorting, sensory testing, and gross motor movement.`;
+  return { steps, collaboration };
 }
 
-// Card body flip logic
-function handleCardBodyClick(event, cardInnerElement) {
-  if (event.target.closest('.action-btn')) return;
-  cardInnerElement.classList.toggle('flipped');
-}
-
-// --- VIEW NAVIGATION ENGINES ---
+// --- TAB / VIEW CONTROL CHANNEL ---
 function switchAppView(viewId) {
   try {
     const plannerView = document.getElementById('view-planner');
@@ -1428,81 +1301,16 @@ function switchPlannerTab(tabId) {
   renderPlanner();
 }
 
-// Generate Instructions cleanly
-function generateInstructions(a) {
-  if (!a) return { steps: "", collaboration: "" };
-  
-  if (a.steps && Array.isArray(a.steps)) {
-    let customSteps = "";
-    a.steps.forEach(s => {
-      if (s) customSteps += `<li>${s}</li>`;
-    });
-    return { steps: customSteps, collaboration: `<strong>🤝 Collaboration Strategy:</strong><br>${a.collaboration || ""}` };
-  }
-  
-  let steps = `<li><strong>Gather:</strong> Collect ${a.materials || ""}.</li>`;
-  if (a.cat === "outing") {
-    steps += `<li><strong>Depart:</strong> Pack snacks/sunscreen and pre-check open hours.</li><li><strong>Explore:</strong> Create secure physical boundary limits on-site.</li>`;
-  } else {
-    steps += `<li><strong>Set Up:</strong> Prep a dedicated, safe floor space or table.</li><li><strong>Play:</strong> Start "${a.title || ""}". Support free exploration.</li><li><strong>Clean Up:</strong> Frame clean-up as a rapid race using a 5-min timer.</li>`;
-  }
-  let collaboration = a.ages === "both" ? 
-    `<strong>🤝 Partnership Plan:</strong><br>The 7yo directs operations, keeps logs, or mixes ingredients. The 3yo gathers, stirs, matches colors, or provides simple physical assistance.` : 
-    `<strong>⚡ Parallel Activities:</strong><br>• <strong>Age 7:</strong> Focus on fine structural building, reading clues, or writing down results.<br>• <strong>Age 3:</strong> Focus on physical sorting, sensory testing, and gross motor movement.`;
-  return { steps, collaboration };
-}
-
-// --- SECURE DATA MODIFIERS ---
-async function toggleHeart(title, isCustom) {
+// --- SECURE DATA MODIFIERS (LOCAL ONLY) ---
+function toggleHeart(title, isCustom) {
   const idx = savedTitles.indexOf(title);
   if (idx === -1) {
     savedTitles.push(title);
-    
-    // Cloud Storage update (Rule 1 & Rule 3 compliant)
-    if (currentUser && db) {
-      try {
-        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title), { saved: true });
-        if (isCustom) {
-          const customActivity = getMergedActivities().find(a => a.title === title);
-          if (customActivity) {
-            await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities', title), customActivity);
-            if (!firestoreCustomActivities.some(a => a.title === title)) {
-              firestoreCustomActivities.push(customActivity);
-            }
-          }
-        }
-      } catch(e) {
-        console.error("Cloud write failed:", e);
-      }
-    }
   } else {
     savedTitles.splice(idx, 1);
-    
-    // Cloud Delete Operations
-    if (currentUser && db) {
-      try {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title));
-        if (isCustom) {
-          await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities', title));
-          firestoreCustomActivities = firestoreCustomActivities.filter(a => a.title !== title);
-        }
-      } catch(e) {
-        console.error("Cloud delete failed:", e);
-      }
-    }
   }
   
-  // Update offline fallback in parallel
-  try {
-    localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
-    if (isCustom) {
-      let customList = getMergedActivities().filter(a => a.steps);
-      localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
-    }
-  } catch(e) {
-    console.warn("Storage write blocked:", e);
-  }
-  
+  saveLocalData();
   updateStats();
   
   const randCard = document.querySelector('#view-randomizer .card-container');
@@ -1518,51 +1326,25 @@ async function toggleHeart(title, isCustom) {
   }
 }
 
-async function toggleHide(title) {
+function toggleHide(title) {
   const idx = hiddenTitles.indexOf(title);
   if (idx === -1) {
     hiddenTitles.push(title);
-    
-    if (currentUser && db) {
-      try {
-        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles', title), { hidden: true });
-        const savedIndex = savedTitles.indexOf(title);
-        if (savedIndex !== -1) {
-          savedTitles.splice(savedIndex, 1);
-          await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title));
-        }
-      } catch(e) {
-        console.error("Cloud write failed:", e);
-      }
-    } else {
-      const savedIndex = savedTitles.indexOf(title);
-      if (savedIndex !== -1) savedTitles.splice(savedIndex, 1);
+    const savedIndex = savedTitles.indexOf(title);
+    if (savedIndex !== -1) {
+      savedTitles.splice(savedIndex, 1);
     }
   } else {
     hiddenTitles.splice(idx, 1);
-    
-    if (currentUser && db) {
-      try {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'hidden_titles', title));
-      } catch(e) {
-        console.error("Cloud delete failed:", e);
-      }
-    }
   }
   
-  try {
-    localStorage.setItem('summer_hidden_titles', JSON.stringify(hiddenTitles));
-    localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
-  } catch(e) {
-    console.warn("Storage write failed:", e);
-  }
-  
+  saveLocalData();
   renderPlanner();
 }
 
 function updateStats() {
   const activeDeckList = getMergedActivities();
-  const savedActivities = activeDeckList.filter(a => a && savedTitles.includes(a.title));
+  const savedActivities = activeDeckList.filter(a => savedTitles.includes(a.title));
   
   const totalEl = document.getElementById('stat-total');
   const outdoorEl = document.getElementById('stat-outdoor');
@@ -1633,7 +1415,7 @@ function renderPlanner() {
         counter++;
         const isSaved = savedTitles.includes(a.title);
         const isHidden = hiddenTitles.includes(a.title);
-        const inst = generateInstructions(a);
+        const inst = generateInstructionsInternal(a);
         const isCustom = (a.steps) ? true : false;
         const escapedTitle = escapeHtml(a.title);
 
@@ -1649,7 +1431,7 @@ function renderPlanner() {
                   <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 </button>` : ''}
 
-              <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat === 'outing' ? 'Outing' : a.cat.charAt(0).toUpperCase() + a.cat.slice(1)}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both ages' : 'Age-specific'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
+              <div class="card-tags"><span class="tag cat-${a.cat}">${a.cat}</span><span class="tag ages-${a.ages}">${a.ages === 'both' ? 'Both' : 'Age-sep'}</span><span class="tag ${costClass(a.cost)}">${costLabel(a.cost)}</span></div>
               <div class="card-title">${a.title}</div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${a.time || "N/A"}</span></div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${a.materials || "N/A"}</span></div>
@@ -1670,7 +1452,7 @@ function renderPlanner() {
     });
 
     if (matches === 0) {
-      html = `<div class="no-results">${plannerTab === 'plan' ? "❤️ Your Plan is Empty<p>Go to the Activities tab and heart a card to build your plan!</p>" : (plannerTab === 'hidden' ? "🗑 No Hidden Cards" : "No matches found.")}</div>`;
+      html = `<div class="no-results">${plannerTab === 'plan' ? "❤️ Your Plan is Empty<p>Find cards in the explorer and tap the heart!</p>" : (plannerTab === 'hidden' ? "🗑 No Hidden Cards" : "No matches found.")}</div>`;
     }
     root.innerHTML = html;
   } catch(e) {
@@ -1678,9 +1460,19 @@ function renderPlanner() {
   }
 }
 
-// --- RANDOMIZER RENDERER ---
+// --- RANDOMIZER RENDERER (centered & stabilized) ---
 function syncUIState() {
   loadStorageData();
+  
+  const currentMerged = getMergedActivities();
+  const totalUnhidden = currentMerged.length - hiddenTitles.length;
+  const likedUnhidden = savedTitles.filter(title => !hiddenTitles.includes(title));
+  const drawPoolMode = document.getElementById('rand-pool')?.value || 'unhidden';
+
+  const dashboardStats = document.getElementById('db-status');
+  if (dashboardStats) {
+    dashboardStats.innerText = drawPoolMode === 'liked' ? `Liked Draw (${likedUnhidden.length})` : `Active Draw (${totalUnhidden})`;
+  }
 }
 
 function spinRandomizer() {
@@ -1704,32 +1496,32 @@ function spinRandomizer() {
   });
 
   if (pool.length === 0) {
-    root.innerHTML = `<p class="placeholder-text" style="color:var(--heart);">No valid activities match your exact filters.</p>`;
+    root.innerHTML = `<p class="placeholder-text" style="color:var(--heart); text-align: center; margin: 0 auto;">No valid activities match your exact filters.</p>`;
     return;
   }
 
   btn.disabled = true;
   let cycles = 0;
   const interval = setInterval(() => {
-    root.innerHTML = `<div class="shuffling">✨ ${pool[Math.floor(Math.random() * pool.length)].title}...</div>`;
+    root.innerHTML = `<div class="shuffling" style="margin: 0 auto; text-align: center; width: 100%;">✨ Drawing card...</div>`;
     if (++cycles >= 8) {
       clearInterval(interval);
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      const inst = generateInstructions(pick);
+      const inst = generateInstructionsInternal(pick);
       const isSaved = savedTitles.includes(pick.title);
       const isCustom = (pick.steps) ? true : false;
       const escapedTitle = escapeHtml(pick.title);
       
       root.innerHTML = `
       <div class="single-card-wrap">
-        <p class="placeholder-text" style="font-size:11px; margin-bottom:8px;">💡 Tap to flip card</p>
+        <p class="placeholder-text" style="font-size:11px; margin-bottom:8px; text-align: center;">💡 Tap to flip card</p>
         <div class="card-container ${pick.cat}" data-title="${escapedTitle}" data-custom="${isCustom}">
           <div class="flip-card-inner" onclick="handleCardBodyClick(event, this)">
             <div class="card-face front">
               <button class="action-btn save-btn ${isSaved ? 'active' : ''}" onclick="handleHeartClick(event, this)">
                 <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
               </button>
-              <div class="card-tags"><span class="tag cat-${pick.cat}">${pick.cat === 'outing' ? 'Outing' : pick.cat.charAt(0).toUpperCase() + pick.cat.slice(1)}</span><span class="tag ages-${pick.ages}">${pick.ages === 'both' ? 'Both ages' : 'Age-specific'}</span><span class="tag ${costClass(pick.cost)}">${costLabel(pick.cost)}</span></div>
+              <div class="card-tags"><span class="tag cat-${pick.cat}">${pick.cat}</span><span class="tag ages-${pick.ages}">${pick.ages}</span><span class="tag ${costClass(pick.cost)}">${costLabel(pick.cost)}</span></div>
               <div class="card-title" style="margin-top:6px;">${pick.title}</div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${pick.time || "N/A"}</span></div>
               <div class="detail-row"><svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>${pick.materials || "N/A"}</span></div>
@@ -1749,8 +1541,8 @@ function spinRandomizer() {
   }, 100);
 }
 
-// --- SAVE CUSTOM CARD FUNCTION ---
-async function saveCustomCard(event) {
+// --- SAVE CUSTOM CARD FUNCTION (LOCAL STORAGE ONLY) ---
+function saveCustomCard(event) {
   try {
     event.preventDefault();
     
@@ -1773,7 +1565,6 @@ async function saveCustomCard(event) {
     const step3 = document.getElementById('cust-step3').value.trim();
     const collaboration = document.getElementById('cust-collaboration').value.trim();
     
-    // Basic validation checks
     if (!title || !time || !materials || !benefit || !step1 || !step2 || !step3 || !collaboration) {
       if (errorToast) {
         errorToast.innerText = "Please fill out all required fields!";
@@ -1782,7 +1573,6 @@ async function saveCustomCard(event) {
       return;
     }
 
-    // Structure the customized card data object safely
     const customCard = {
       title,
       cat,
@@ -1796,49 +1586,24 @@ async function saveCustomCard(event) {
       collaboration
     };
 
-    // Firebase Cloud synchronization
-    if (currentUser && db) {
-      try {
-        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'custom_activities', title), customCard);
-        if (!firestoreCustomActivities.some(a => a.title === title)) {
-          firestoreCustomActivities.push(customCard);
-        }
-        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saved_titles', title), { saved: true });
-        if (!savedTitles.includes(title)) {
-          savedTitles.push(title);
-        }
-      } catch(e) {
-        console.error("Cloud custom save failed:", e);
-      }
-    } else {
-      // LocalStorage Fallback sync
-      let customList = [];
-      try {
-        customList = JSON.parse(localStorage.getItem('summer_custom_activities')) || [];
-        if (!Array.isArray(customList)) customList = [];
-      } catch(e) {
-        customList = [];
-      }
-      customList.push(customCard);
-      localStorage.setItem('summer_custom_activities', JSON.stringify(customList));
-
-      loadStorageData();
-      if (!savedTitles.includes(title)) {
-        savedTitles.push(title);
-        localStorage.setItem('summer_saved_titles', JSON.stringify(savedTitles));
-      }
+    customActivities.push(customCard);
+    
+    if (!savedTitles.includes(title)) {
+      savedTitles.push(title);
     }
+    
+    saveLocalData();
 
     // Clear Form Fields
     document.getElementById('custom-activity-form').reset();
 
     // Success response sequence
     if (successToast) {
-      successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Activities...`;
+      successToast.innerHTML = `🎉 <strong>Saved successfully!</strong> "${title}" is now added and hearted. Redirecting to your Planner...`;
       successToast.style.display = 'block';
     }
 
-    // Smooth routing transition back to Deck Planner so they instantly see it inside "My Plan"
+    // Smooth routing transition back to Deck Planner
     setTimeout(() => {
       if (successToast) successToast.style.display = 'none';
       plannerTab = 'plan'; // Show them "My Plan"
@@ -1850,7 +1615,7 @@ async function saveCustomCard(event) {
   }
 }
 
-// --- ROUTINE PLANNER LOGIC MAPPING ---
+// --- ROUTINE PLANNER BLOCK ASSIGNMENT ---
 function renderRoutine() {
   const root = document.getElementById('routine-week-root');
   if (!root) return;
@@ -1858,7 +1623,6 @@ function renderRoutine() {
   let html = "";
   
   daysOfWeek.forEach(day => {
-    // Lookup saved activity states
     const assignedBurn = routineSchedule[`${day}_burn`] || "";
     const assignedSplit = routineSchedule[`${day}_split`] || "";
     const assignedJoint = routineSchedule[`${day}_joint`] || "";
@@ -1867,7 +1631,6 @@ function renderRoutine() {
       <div class="day-card" data-day="${day}">
         <div class="day-header">${day}</div>
         
-        <!-- MORNING ANCHOR (Standard Static) -->
         <div class="time-block">
           <div class="time-label">8:00 - 9:00 AM</div>
           <div class="block-content tier-anchor">
@@ -1876,7 +1639,6 @@ function renderRoutine() {
           </div>
         </div>
 
-        <!-- HIGH ENERGY OUTING (Customizable Block) -->
         <div class="time-block">
           <div class="time-label">9:00 - 10:30 AM</div>
           <div class="block-content tier-burn" onclick="openAssignmentModal('${day}_burn', 'burn')">
@@ -1890,7 +1652,6 @@ function renderRoutine() {
           </div>
         </div>
 
-        <!-- SPLIT-FOCUS BLOCK (Customizable Block) -->
         <div class="time-block">
           <div class="time-label">11:00 - 12:00 PM</div>
           <div class="block-content tier-split" onclick="openAssignmentModal('${day}_split', 'split')">
@@ -1909,7 +1670,6 @@ function renderRoutine() {
           </div>
         </div>
 
-        <!-- NON-NEGOTIABLE REST (Standard Static) -->
         <div class="time-block">
           <div class="time-label">1:00 - 3:00 PM</div>
           <div class="block-content tier-rest">
@@ -1918,7 +1678,6 @@ function renderRoutine() {
           </div>
         </div>
 
-        <!-- JOINT PROJECT BLOCK (Customizable Block) -->
         <div class="time-block">
           <div class="time-label">3:30 - 4:30 PM</div>
           <div class="block-content tier-joint" onclick="openAssignmentModal('${day}_joint', 'joint')">
@@ -1939,37 +1698,32 @@ function renderRoutine() {
   root.innerHTML = html;
 }
 
-// Opens the customized card assignment overlay filter lists dynamically based on type of block selected
 function openAssignmentModal(blockId, blockType) {
   activeSelectionBlock = blockId;
   const modal = document.getElementById('assignment-modal');
   const listRoot = document.getElementById('modal-card-list');
   const titleEl = document.getElementById('modal-block-title');
-  const descEl = document.getElementById('modal-block-desc');
   
   if (!modal || !listRoot) return;
 
-  // Sync title text
   const rawDay = blockId.split('_')[0];
-  titleEl.innerText = `${rawDay} - Block Assignment`;
+  if (titleEl) titleEl.innerText = `${rawDay} - Block Assignment`;
 
   const pool = getMergedActivities().filter(a => {
-    // Filter out hidden cards
     if (hiddenTitles.includes(a.title)) return false;
 
-    // Filter by Block Type expectations
     if (blockType === 'burn') {
       return a.cat === 'outdoor' || a.cat === 'outing';
     } else if (blockType === 'split') {
-      return a.ages === 'sep'; // Parallel activities are ideal for split
+      return a.ages === 'sep';
     } else if (blockType === 'joint') {
-      return a.ages === 'both'; // Joint blocks benefit from works together cards
+      return a.ages === 'both';
     }
     return true;
   });
 
   if (pool.length === 0) {
-    listRoot.innerHTML = `<p class="placeholder-text">No active cards found in this category. Go to the Activities tab and unhide some!</p>`;
+    listRoot.innerHTML = `<p class="placeholder-text">No active cards found in this category. Go to the Planner tab and unhide some!</p>`;
   } else {
     let listHtml = `
       <div class="selection-item" onclick="assignActivityToBlock('')" style="border-color:#e88c8c; background:#fff2f2;">
@@ -1977,7 +1731,6 @@ function openAssignmentModal(blockId, blockType) {
       </div>
     `;
     
-    // Sort unhidden cards so Liked/Hearted ones show at the very top of the modal!
     pool.sort((x, y) => {
       const xLiked = savedTitles.includes(x.title);
       const yLiked = savedTitles.includes(y.title);
@@ -2015,60 +1768,43 @@ function closeAssignmentModal() {
   activeSelectionBlock = null;
 }
 
-async function assignActivityToBlock(activityTitle) {
+function assignActivityToBlock(activityTitle) {
   if (!activeSelectionBlock) return;
   
   if (activityTitle === "") {
     delete routineSchedule[activeSelectionBlock];
-    
-    // Cloud sync clear action
-    if (currentUser && db) {
-      try {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule', activeSelectionBlock));
-      } catch(e) {
-        console.error("Cloud routine delete failed:", e);
-      }
-    }
   } else {
     routineSchedule[activeSelectionBlock] = activityTitle;
-    
-    // Cloud Sync Write Action
-    if (currentUser && db) {
-      try {
-        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'routine_schedule', activeSelectionBlock), {
-          assignedActivity: activityTitle
-        });
-      } catch(e) {
-        console.error("Cloud routine write failed:", e);
-      }
-    }
   }
 
-  // Backup offline localStorage
-  try {
-    localStorage.setItem('summer_routine_schedule', JSON.stringify(routineSchedule));
-  } catch(e) {
-    console.warn("Storage write failed:", e);
-  }
-
+  saveLocalData();
   closeAssignmentModal();
   renderRoutine();
 }
 
-// --- GLOBALIZE MODULE SCOPE AGENTS FOR INLINE COMPATIBILITY ---
-window.switchAppView = switchAppView;
-window.switchPlannerTab = switchPlannerTab;
+// --- GLOBALIZE INTERNAL ROUTERS IMMEDIATELY FOR MODULE COMPATIBILITY ---
+window._internalSwitchAppView = switchAppView;
+window._internalSwitchPlannerTab = switchPlannerTab;
+
+// --- GLOBALIZE INTERACTION BRIDGES TO FIX REFERENCEERRORS ---
+window._internalHandleHeartClick = toggleHeart;
+window._internalHandleHideClick = toggleHide;
+window._internalHandleCardBodyClick = handleCardBodyClick;
+
+// --- GLOBALIZE THE CRITICAL MERGED ACTIVITIES ROUTER ---
+window._internalGetMergedActivities = getMergedActivities;
+
+// --- GLOBALIZE INSTRUCTION GENERATOR ---
+window._internalGenerateInstructions = generateInstructionsInternal;
+
+// --- GLOBALIZE OTHER METHODS ---
 window.spinRandomizer = spinRandomizer;
 window.saveCustomCard = saveCustomCard;
-window.handleHeartClick = handleHeartClick;
-window.handleHideClick = handleHideClick;
-window.handleCardBodyClick = handleCardBodyClick;
 window.openAssignmentModal = openAssignmentModal;
 window.closeAssignmentModal = closeAssignmentModal;
 window.assignActivityToBlock = assignActivityToBlock;
-window.loadStorageData = loadStorageData;
-window.renderPlanner = renderPlanner; // Critical to globalize inline rendering callbacks
-window.renderRoutine = renderRoutine;  // Critical to globalize inline rendering callbacks
+window.renderPlanner = renderPlanner; 
+window.renderRoutine = renderRoutine;  
 
 // Initial execution Boot
 renderPlanner();
